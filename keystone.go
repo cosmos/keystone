@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/regen-network/keystone2/keystone"
+	hsmkeys "github.com/regen-network/keystone/keys"
 )
 
 type Server = pb.KeyringServer
@@ -20,6 +21,7 @@ type server struct{
 	KeyringType      string
 	KeyringDir       string
 	RpcURI           string
+	Keystore         *hsmkeys.Pkcs11Keyring
 }
 
 func New() (Server, error) {
@@ -31,7 +33,7 @@ func New() (Server, error) {
 func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
 	log.Printf("Receive message body from client: %v", in)
 
-	newLabel := "abcde123"
+	newLabel := "urn:network.regen.keystone:keystore123:abcde123"
 	return &pb.KeyRef{Label: &newLabel}, nil
 }
 
@@ -52,11 +54,19 @@ func main() {
 	keyringDir := flag.String("keyring-dir", "~/.regen/", "the directory where the keys are")
 	chainRpcURI := flag.String("chain-rpc", "tcp://localhost:26657", "the address of the RPC endpoint to communicate with the blockchain")
 	grpcListenPort := flag.String("listen-port", "8080", "the port where the server will listen for connections")
+	pkcs11KeyringConfig := flag.String("pkcsll-cfg", "./pkcs11-config", "configuration file for PKCS11 HSM connection")
 
 	flag.Parse()
 
 	if len(*keystoneAddress) <= 0 {
 		log.Fatalln("Keystone server blockchain address may not be left empty")
+		return
+	}
+
+	kr, err := hsmkeys.NewPkcs11FromConfig(*pkcs11KeyringConfig)
+
+	if err != nil {
+		log.Fatalln("Failed to initialize keystore")
 		return
 	}
 
@@ -73,6 +83,7 @@ func main() {
 		KeyringType: *keyringType,
 		KeyringDir: *keyringDir,
 		RpcURI: *chainRpcURI,
+		Keystore: kr,
 	}
 	
 	s := grpc.NewServer()
