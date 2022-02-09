@@ -47,14 +47,14 @@ message publicKey {
 }
 
 message signable {
-  oneof signableUnion {
+  oneof data {
     bytes          signableBytes = 1 ;
     string         txref = 2 ;
   }
 }
 
 message signed {
-  oneof signedUnion {
+  oneof data {
     bytes          signedBytes = 1 ;
     string         signedTxRef = 2 ;
     int32          error = 3 ;
