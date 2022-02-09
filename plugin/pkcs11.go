@@ -7,12 +7,18 @@ import (
 	hsmkeys "github.com/regen-network/keystone/keys"
 )
 
+const PLUGIN_TYPE_PKCS11_ID = "urn:network.regen.keystone.plugins:pkcs11"
+
 var kr *keyring = nil
 
 type keyring struct {
 	keystore    *hsmkeys.Pkcs11Keyring
 }
 
+func TypeIdentifier() string {
+	return PLUGIN_TYPE_PKCS11_ID
+}
+	
 // Init initializes this keyring using the passed in file path
 // which should implement the KeyringPlugin interface @@TODO
 func Init(configPath string) error {
@@ -40,6 +46,8 @@ func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 		
 		// @@TODO: support more than just this key type, based
 		// on input KeySpec
+		// @@TODO standardize on hsmkeys algo identifiers also in the PB
+		
 		key, err := kr.keystore.NewKey(hsmkeys.KEYGEN_SECP256K1, string(in.Label))
 
 		if err != nil {
@@ -56,4 +64,56 @@ func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 	}
 }
 
+// PubKey returns the bytes of the public key associated with the
+// KeyRef that is specified by the input KeySpec
+// @@TODO should really have pub key objects created on the HSM so
+// they don't need priv key to be first retrieved, put in memory and
+// then get the pub key bytes
+func PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
+	key, err := kr.keystore.Key( string( in.Label ))
 
+	if err != nil {
+		return nil, err
+	} else {
+		public := pb.PublicKey{
+			KeyBytes: key.PubKeyBytes(),
+		}
+		return &public, nil
+	}
+}
+
+// Sign takes a protobuf message containing content (bytes or a
+// reference), KeySpec and signs it according to a SigningProfile
+func Sign(in *pb.Msg) (*pb.Signed, error) {
+
+	keyLabel := in.KeySpec.Label
+	key, err := kr.keystore.Key( string( keyLabel ))
+
+	if err != nil {
+		return nil, err
+	}
+	
+	switch in.Content.Data.(type) {
+	case *pb.Signable_SignableBytes:
+		cleartext := in.Content.GetSignableBytes()
+
+		signature, err := key.Sign( cleartext, nil )
+
+		if err != nil {
+			return nil, err
+		}
+		
+		signedBytes := pb.Signed_SignedBytes{
+			SignedBytes: signature,
+		}
+
+		signed := pb.Signed{
+			Data: &signedBytes,
+		}
+		
+		return &signed, nil
+	default:
+		return nil, errors.New("Cannot sign these data")
+	}
+}
+	
