@@ -2,26 +2,39 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"net"
-	"flag"
+	"plugin"
 
 	"google.golang.org/grpc"
 
-	pb "github.com/regen-network/keystone2/keystone"
 	hsmkeys "github.com/regen-network/keystone/keys"
+	pb "github.com/regen-network/keystone2/keystone"
 )
+
+type pluginFlags []string
+
+func (i *pluginFlags) String() string {
+	return "a list of keyserving plugin paths"
+}
+
+func (i *pluginFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
 
 type Server = pb.KeyringServer
 
-type server struct{
+type server struct {
 	pb.UnimplementedKeyringServer
-	ServerAddress    string
-	ChainID          string
-	KeyringType      string
-	KeyringDir       string
-	RpcURI           string
-	Keystore         *hsmkeys.Pkcs11Keyring
+	ServerAddress string
+	ChainID       string
+	KeyringType   string
+	KeyringDir    string
+	RpcURI        string
+	Keystore      *hsmkeys.Pkcs11Keyring
+	Plugins       []*plugin.Plugin
 }
 
 func New() (Server, error) {
@@ -45,7 +58,7 @@ func (s *server) Key(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
 }
 
 func main() {
-
+	var plugins pluginFlags
 	// Retrieve the command line parameters passed in to configure the server
 	// Most have likely-reasonable defaults.
 	keystoneAddress := flag.String("key-addr", "", "the address associated with the key used to sign transactions on behalf of Keystone")
@@ -55,6 +68,7 @@ func main() {
 	chainRpcURI := flag.String("chain-rpc", "tcp://localhost:26657", "the address of the RPC endpoint to communicate with the blockchain")
 	grpcListenPort := flag.String("listen-port", "8080", "the port where the server will listen for connections")
 	pkcs11KeyringConfig := flag.String("pkcsll-cfg", "./pkcs11-config", "configuration file for PKCS11 HSM connection")
+	flag.Var(&plugins, "key-plugin", "one or more key-serving plugins")
 
 	flag.Parse()
 
@@ -70,7 +84,31 @@ func main() {
 		return
 	}
 
-	lis, err := net.Listen("tcp", ":" + *grpcListenPort)
+	if len(plugins) <= 0 {
+		log.Fatalln("At least one key-serving plugin libraries MUST be given with -plugin")
+	}
+
+	var pluginList []*plugin.Plugin
+
+	for _, s := range plugins {
+		p, err := plugin.Open(s)
+		if err != nil {
+			log.Fatalf("Plugin could not be loaded from %s\n", s)
+		}
+		v, err := p.Lookup("TypeIdentifier")
+
+		typeId, ok := v.(func() string)
+
+		if !ok || len(typeId()) < 1 {
+			log.Printf("No type identifier for the plugin, so not keeping it!")
+		} else {
+			pluginList = append(pluginList, p)
+		}
+
+		log.Printf("ID: %v", typeId())
+	}
+
+	lis, err := net.Listen("tcp", ":"+*grpcListenPort)
 
 	if err != nil {
 		log.Fatalln("Failed to listen:", err)
@@ -79,13 +117,14 @@ func main() {
 	// Create new server context, used for passing server-global state
 	ss := server{
 		ServerAddress: *keystoneAddress,
-		ChainID: *blockchain,
-		KeyringType: *keyringType,
-		KeyringDir: *keyringDir,
-		RpcURI: *chainRpcURI,
-		Keystore: kr,
+		ChainID:       *blockchain,
+		KeyringType:   *keyringType,
+		KeyringDir:    *keyringDir,
+		RpcURI:        *chainRpcURI,
+		Keystore:      kr,
+		Plugins:       pluginList,
 	}
-	
+
 	s := grpc.NewServer()
 	pb.RegisterKeyringServer(s, &ss)
 
