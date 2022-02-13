@@ -21,6 +21,7 @@ type KeyringClient interface {
 	NewKey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error)
 	Key(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error)
 	Pubkey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*PublicKey, error)
+	Metadata(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyMetadata, error)
 	Sign(ctx context.Context, in *Msg, opts ...grpc.CallOption) (*Signed, error)
 }
 
@@ -59,6 +60,15 @@ func (c *keyringClient) Pubkey(ctx context.Context, in *KeySpec, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *keyringClient) Metadata(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyMetadata, error) {
+	out := new(KeyMetadata)
+	err := c.cc.Invoke(ctx, "/keystone.keyring/metadata", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *keyringClient) Sign(ctx context.Context, in *Msg, opts ...grpc.CallOption) (*Signed, error) {
 	out := new(Signed)
 	err := c.cc.Invoke(ctx, "/keystone.keyring/sign", in, out, opts...)
@@ -75,6 +85,7 @@ type KeyringServer interface {
 	NewKey(context.Context, *KeySpec) (*KeyRef, error)
 	Key(context.Context, *KeySpec) (*KeyRef, error)
 	Pubkey(context.Context, *KeySpec) (*PublicKey, error)
+	Metadata(context.Context, *KeySpec) (*KeyMetadata, error)
 	Sign(context.Context, *Msg) (*Signed, error)
 	mustEmbedUnimplementedKeyringServer()
 }
@@ -91,6 +102,9 @@ func (UnimplementedKeyringServer) Key(context.Context, *KeySpec) (*KeyRef, error
 }
 func (UnimplementedKeyringServer) Pubkey(context.Context, *KeySpec) (*PublicKey, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Pubkey not implemented")
+}
+func (UnimplementedKeyringServer) Metadata(context.Context, *KeySpec) (*KeyMetadata, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Metadata not implemented")
 }
 func (UnimplementedKeyringServer) Sign(context.Context, *Msg) (*Signed, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sign not implemented")
@@ -162,6 +176,24 @@ func _Keyring_Pubkey_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Keyring_Metadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeySpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyringServer).Metadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/keystone.keyring/metadata",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyringServer).Metadata(ctx, req.(*KeySpec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Keyring_Sign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Msg)
 	if err := dec(in); err != nil {
@@ -198,6 +230,10 @@ var Keyring_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "pubkey",
 			Handler:    _Keyring_Pubkey_Handler,
+		},
+		{
+			MethodName: "metadata",
+			Handler:    _Keyring_Metadata_Handler,
 		},
 		{
 			MethodName: "sign",

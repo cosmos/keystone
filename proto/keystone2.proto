@@ -31,19 +31,29 @@ enum signingProfile {
 }
 
 message keySpec {
-  string           label = 1 ;
-  sfixed32         size = 2 ;
-  keygenAlgorithm  algo = 3 ;
+  int32            id = 1 ;
+  string           label = 2 ;
+  sfixed32         size = 3 ;
+  keygenAlgorithm  algo = 4 ;
+}
+
+message keyMetadata {
+  int32            id = 1 ;
+  int32            keyId = 2 ;
+  sfixed32         size = 3 ;
+  keygenAlgorithm  algo = 4 ;
 }
 
 // label could be a Cosmos (group) address...
 message keyRef {
-  optional string  label = 1 ;
+  int32            inResponseTo = 1 ;
+  optional string  label = 2 ;
 }
 
 message publicKey {
-  string           label = 1 ;
-  bytes            keyBytes = 2 ;
+  int32            inResponseTo = 1 ;
+  string           label = 2 ;
+  bytes            keyBytes = 3 ;
 }
 
 message signable {
@@ -54,17 +64,19 @@ message signable {
 }
 
 message signed {
+  int32            inResponseTo = 1 ;
   oneof data {
-    bytes          signedBytes = 1 ;
-    string         signedTxRef = 2 ;
-    int32          error = 3 ;
+    bytes          signedBytes = 2 ;
+    string         signedTxRef = 3 ;
+    int32          error = 4 ;
   }
 }
 
 message msg {
-  keySpec          keySpec = 1 ;
-  signingProfile   signingProfile = 2 ;
-  signable         content = 3 ;
+  int32            id = 1 ;
+  keySpec          keySpec = 2 ;
+  signingProfile   signingProfile = 3 ;
+  signable         content = 4 ;
 }
 
 // Currently, a new keyring is created OOB, and is assumed to exist
@@ -75,5 +87,6 @@ service keyring {
   rpc newKey(keySpec)                         returns (keyRef) {} ;
   rpc key(keySpec)                            returns (keyRef) {} ;
   rpc pubkey(keySpec)                         returns (publicKey) {} ;
-  rpc sign(msg) returns (signed) {} ;
+  rpc metadata(keySpec)                       returns (keyMetadata) {} ;
+  rpc sign(msg)                               returns (signed) {} ;
 }
