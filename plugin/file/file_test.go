@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 	"plugin"
+	"log"
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/regen-network/keystone2/keystone"
@@ -21,12 +22,20 @@ func TestPlugin(t *testing.T) {
 	typeId, ok := v.(func() string)
 	require.Equal(t, ok, true)
 	require.NotZero(t, len(typeId()))
-	require.Equal(typeId(), Plugin_Type_File_Id)
+	require.Equal(t, typeId(), FILE_PLUGIN_ID)
 
 	v, err = p.Lookup("NewKey")
 	require.NoError(t, err)
 	
-	newKey, ok := v.(func() string)
-	require.Equal(t, ok, true)	
+	newKey, ok := v.(func(*pb.KeySpec) (*pb.KeyRef, error))
+	require.Equal(t, ok, true)
+	spec := pb.KeySpec{
+		Label: "foo123",
+	}
+	
+	ref, err := newKey(&spec)
+	require.NoError(t, err)
+	
+	log.Printf("Label: %v", ref.Label)
 }
 

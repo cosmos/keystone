@@ -18,6 +18,6 @@ func TestPlugin(t *testing.T) {
 	typeId, ok := v.(func() string)
 	require.Equal(t, ok, true)
 	require.NotZero(t, len(typeId()))
-	require.Equal(typeId(), Plugin_Type_Pkcs11_Id)
+	require.Equal(t, typeId(), PKCS11_PLUGIN_ID)
 }
 
