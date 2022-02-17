@@ -24,6 +24,15 @@ func TestPlugin(t *testing.T) {
 	require.NotZero(t, len(typeId()))
 	require.Equal(t, typeId(), FILE_PLUGIN_ID)
 
+	v, err = p.Lookup("Init")
+	require.NoError(t, err)
+
+	init, ok := v.(func(string) (error))
+	require.Equal(t, ok, true)
+
+	err = init("./keys")
+	require.NoError(t, err)
+
 	v, err = p.Lookup("NewKey")
 	require.NoError(t, err)
 	
@@ -31,6 +40,7 @@ func TestPlugin(t *testing.T) {
 	require.Equal(t, ok, true)
 	spec := pb.KeySpec{
 		Label: "foo123",
+		Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
 	}
 	
 	ref, err := newKey(&spec)
