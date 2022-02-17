@@ -11,6 +11,7 @@ import (
 	"os"
 	"crypto/rand"
 	"encoding/pem"
+	"log"
 
 	pb "github.com/regen-network/keystone2/keystone"
 	"github.com/frumioj/crypto11"
@@ -77,11 +78,15 @@ func decodePubkeyPem( pemEncodedPub string ) (crypto.PublicKey, error ) {
 }
 	
 func writeKeys( kr string, filePrefix string, pemEncodedKey string, pemEncodedPub string ) (error) {
+	log.Printf("Creating key in %s", kr + "/" + filePrefix + ".pem")
+	
 	err := os.WriteFile(kr + "/" + filePrefix + ".pem", []byte(pemEncodedKey), 0600)
 
 	if err != nil {
 		return errors.New("Could not create key")
 	}
+	
+	log.Printf("Creating key in %s", kr + "/" + filePrefix + ".pem")
 	
 	err = os.WriteFile(kr + "/" + filePrefix + "pub.pem", []byte(pemEncodedPub), 0600)
 
@@ -162,6 +167,8 @@ func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 	} else {
 		if in.Algo == pb.KeygenAlgorithm_KEYGEN_SECP256K1 {
 			keygenSpec = crypto11.P256K1()
+		} else {
+			return nil, errors.New("Could not create key")
 		}
 	}
 	
