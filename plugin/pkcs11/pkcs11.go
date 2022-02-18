@@ -5,6 +5,7 @@ import (
 	"errors"
 	pb "github.com/regen-network/keystone2/keystone"
 	hsmkeys "github.com/regen-network/keystone/keys"
+	plugin "github.com/regen-network/keystone2/plugin"
 )
 
 const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
@@ -21,24 +22,24 @@ func TypeIdentifier() string {
 	
 // Init initializes this keyring using the passed in file path
 // which should implement the KeyringPlugin interface @@TODO
-func Init(configPath string) error {
+func Init(configPath string) (plugin.Plugin, error) {
 
 	k11, err := hsmkeys.NewPkcs11FromConfig(configPath)
 
 	if err != nil {
-		return err
+		return nil, err
 	} else {
 		kr = &keyring{
 			keystore: k11,
 		}
-		return nil
+		return kr, nil
 	}
 }
 
 // NewKey creates a new private key(pair) on the existing keyring that
 // is implemented by this plugin. For PKCS11, it will do that on a
 // connected HSM
-func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
+func (*keyring) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 	
 	fmt.Println("PKCS11 plugin NewKey")
 	
@@ -69,7 +70,7 @@ func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 // @@TODO should really have pub key objects created on the HSM so
 // they don't need priv key to be first retrieved, put in memory and
 // then get the pub key bytes
-func PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
+func (*keyring)  PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
 	key, err := kr.keystore.Key( string( in.Label ))
 
 	if err != nil {
@@ -84,7 +85,7 @@ func PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
 
 // Sign takes a protobuf message containing content (bytes or a
 // reference), KeySpec and signs it according to a SigningProfile
-func Sign(in *pb.Msg) (*pb.Signed, error) {
+func (*keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 
 	keyLabel := in.KeySpec.Label
 	key, err := kr.keystore.Key( string( keyLabel ))
