@@ -15,6 +15,7 @@ import (
 
 	pb "github.com/regen-network/keystone2/keystone"
 	"github.com/frumioj/crypto11"
+	plugin "github.com/regen-network/keystone2/plugin"
 )
 
 const Plugin_Type_File_Id = "urn:network.regen.keystone.plugins:file"
@@ -125,8 +126,6 @@ func readPubKey( kr string, filePrefix string ) ( pemEncodedPub string, err erro
 
 // This keyring just uses the filesystem to store keys
 
-var kr *keyring = nil
-
 type keyring struct {
 	keystorePath string
 }
@@ -139,24 +138,24 @@ func TypeIdentifier() string {
 	
 // Init initializes this keyring using the passed in file path
 // which should implement the KeyringPlugin interface @@TODO
-func Init(configPath string) error {
-	err := os.MkdirAll(configPath, os.ModePerm)
+func Init(configPath string) (kr plugin.Plugin, err error) {
+	err = os.MkdirAll(configPath, os.ModePerm)
 
 	if err != nil && !os.IsExist(err) {
-		return errors.New("Could not initialize keystore")
+		return nil, errors.New("Could not initialize keystore")
 	}
 
 	kr = &keyring{
 		keystorePath: configPath,
 	}
 
-	return nil
+	return kr, nil
 }
 
 // NewKey creates a new private key(pair) on the existing keyring that
 // is implemented by this plugin. This creates a new keypair, and
 // stores each key in a file on the filesystem.
-func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
+func (kr *keyring) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 
 	var keygenSpec elliptic.Curve
 
@@ -201,7 +200,7 @@ func NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 // @@TODO should really have pub key objects created on the HSM so
 // they don't need priv key to be first retrieved, put in memory and
 // then get the pub key bytes
-func PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
+func (kr *keyring) PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
 	pemEncodedPub, err := readPubKey( kr.keystorePath, string(in.Label) )
 	key, err := decodePubkeyPem( pemEncodedPub )
 
@@ -227,7 +226,7 @@ func PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
 
 // Sign takes a protobuf message containing content (bytes or a
 // reference), KeySpec and signs it according to a SigningProfile
-func Sign(in *pb.Msg) (*pb.Signed, error) {
+func (kr *keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 	pemEncodedPriv, pemEncodedPub, err := readKeys( kr.keystorePath, string(in.KeySpec.Label) )
 	
 	if err != nil {
