@@ -3,10 +3,10 @@ package main
 import (
 	"testing"
 	"plugin"
-	"log"
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/regen-network/keystone2/keystone"
+	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
 const FILE_PLUGIN_PATH = "./file_keys.so"
@@ -27,25 +27,17 @@ func TestPlugin(t *testing.T) {
 	v, err = p.Lookup("Init")
 	require.NoError(t, err)
 
-	init, ok := v.(func(string) (error))
-	require.Equal(t, ok, true)
-
-	err = init("./keys")
+	filePlugin, err := v.(func(string) (kr krplugin.Plugin, err error))("./keys")
 	require.NoError(t, err)
 
-	v, err = p.Lookup("NewKey")
-	require.NoError(t, err)
-	
-	newKey, ok := v.(func(*pb.KeySpec) (*pb.KeyRef, error))
-	require.Equal(t, ok, true)
 	spec := pb.KeySpec{
 		Label: "foo123",
 		Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
 	}
 	
-	ref, err := newKey(&spec)
+	ref, err := filePlugin.NewKey(&spec)
 	require.NoError(t, err)
 	
-	log.Printf("Label: %v", ref.Label)
+	t.Logf("Label: %v", ref.Label)
 }
 
