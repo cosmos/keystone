@@ -14,7 +14,7 @@ type Options struct {
 // Plugin interface specifies the methods required for implementation
 // by a plugin
 type Plugin interface {
-	NewKey(in *pb.KeySpec, options Options) (*pb.KeyRef, error)
-	PubKey(in *pb.KeySpec, options Options) (*pb.PublicKey, error)
-	Sign(in *pb.Msg, options Options) (*pb.Signed, error)
+	NewKey(in *pb.KeySpec) (*pb.KeyRef, error)
+	PubKey(in *pb.KeySpec) (*pb.PublicKey, error)
+	Sign(in *pb.Msg) (*pb.Signed, error)
 }
