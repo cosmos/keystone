@@ -5,7 +5,7 @@ import (
 	"errors"
 	pb "github.com/regen-network/keystone2/keystone"
 	hsmkeys "github.com/regen-network/keystone/keys"
-	plugin "github.com/regen-network/keystone2/plugin"
+	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
 const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
@@ -22,7 +22,7 @@ func TypeIdentifier() string {
 	
 // Init initializes this keyring using the passed in file path
 // which should implement the KeyringPlugin interface @@TODO
-func Init(configPath string) (plugin.Plugin, error) {
+func Init(configPath string) (krplugin.Plugin, error) {
 
 	k11, err := hsmkeys.NewPkcs11FromConfig(configPath)
 
