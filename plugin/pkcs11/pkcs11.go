@@ -8,8 +8,6 @@ import (
 	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
-const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
-
 var kr *keyring = nil
 
 type keyring struct {
@@ -17,7 +15,7 @@ type keyring struct {
 }
 
 func TypeIdentifier() string {
-	return Plugin_Type_Pkcs11_Id
+	return krplugin.Plugin_Type_Pkcs11_Id
 }
 	
 // Init initializes this keyring using the passed in file path

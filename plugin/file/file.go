@@ -18,8 +18,6 @@ import (
 	plugin "github.com/regen-network/keystone2/plugin"
 )
 
-const Plugin_Type_File_Id = "urn:network.regen.keystone.plugins:file"
-
 // PRIVATE functions
 
 // encodeKeypair takes an ECDSA keypair as a private and a public key,
@@ -133,7 +131,7 @@ type keyring struct {
 // PUBLIC interface for a plugin
 
 func TypeIdentifier() string {
-	return Plugin_Type_File_Id
+	return krplugin.Plugin_Type_File_Id
 }
 	
 // Init initializes this keyring using the passed in file path

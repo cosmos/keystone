@@ -4,6 +4,9 @@ import (
 	pb "github.com/regen-network/keystone2/keystone"
 )
 
+const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
+const Plugin_Type_File_Id = "urn:network.regen.keystone.plugins:file"
+
 // Options struct contains anything that is needed for configuring a
 // plugin with one element initially, a path to a configuration, which
 // can be interpreted differently by an individual plugin
