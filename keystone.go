@@ -9,8 +9,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	hsmkeys "github.com/regen-network/keystone/keys"
 	pb "github.com/regen-network/keystone2/keystone"
+	krplugin "github.com/regen-network/keystone2/plugin"
+	
 )
 
 type pluginFlags []string
@@ -33,8 +34,7 @@ type server struct {
 	KeyringType   string
 	KeyringDir    string
 	RpcURI        string
-	Keystore      *hsmkeys.Pkcs11Keyring
-	Plugins       []*plugin.Plugin
+	Plugins       []*krplugin.Plugin
 }
 
 func New() (Server, error) {
@@ -68,6 +68,7 @@ func main() {
 	chainRpcURI := flag.String("chain-rpc", "tcp://localhost:26657", "the address of the RPC endpoint to communicate with the blockchain")
 	grpcListenPort := flag.String("listen-port", "8080", "the port where the server will listen for connections")
 	pkcs11KeyringConfig := flag.String("pkcsll-cfg", "./pkcs11-config", "configuration file for PKCS11 HSM connection")
+	fileKeyringConfig := flag.String("file-cfg", "./keys", "configuration file for PKCS11 HSM connection")
 	flag.Var(&plugins, "key-plugin", "one or more key-serving plugins")
 
 	flag.Parse()
@@ -77,18 +78,18 @@ func main() {
 		return
 	}
 
-	kr, err := hsmkeys.NewPkcs11FromConfig(*pkcs11KeyringConfig)
+	//kr, err := hsmkeys.NewPkcs11FromConfig(*pkcs11KeyringConfig)
 
-	if err != nil {
-		log.Fatalln("Failed to initialize keystore")
-		return
-	}
+	//if err != nil {
+	//	log.Fatalln("Failed to initialize keystore")
+	//	return
+	//}
 
 	if len(plugins) <= 0 {
 		log.Fatalln("At least one key-serving plugin libraries MUST be given with -plugin")
 	}
 
-	var pluginList []*plugin.Plugin
+	var pluginList []*krplugin.Plugin
 
 	for _, s := range plugins {
 		p, err := plugin.Open(s)
@@ -102,10 +103,30 @@ func main() {
 		if !ok || len(typeId()) < 1 {
 			log.Printf("No type identifier for the plugin, so not keeping it!")
 		} else {
-			pluginList = append(pluginList, p)
+
+			v, err = p.Lookup("Init")
+
+			var kr krplugin.Plugin = nil
+			
+			if err == nil &&
+				typeId() == krplugin.Plugin_Type_File_Id {
+				
+				kr, err = v.(func(string) (kr krplugin.Plugin, err error))( *fileKeyringConfig)
+			} else {
+				if err == nil && typeId() == krplugin.Plugin_Type_Pkcs11_Id {
+					kr, err = v.(func(string) (kr krplugin.Plugin, err error))( *pkcs11KeyringConfig)
+				}
+			}
+			
+			if err == nil {
+				pluginList = append(pluginList, &kr)
+			} else {
+				// move on
+			}
 		}
 
 		log.Printf("ID: %v", typeId())
+		
 	}
 
 	lis, err := net.Listen("tcp", ":"+*grpcListenPort)
@@ -121,7 +142,6 @@ func main() {
 		KeyringType:   *keyringType,
 		KeyringDir:    *keyringDir,
 		RpcURI:        *chainRpcURI,
-		Keystore:      kr,
 		Plugins:       pluginList,
 	}
 
