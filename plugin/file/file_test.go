@@ -10,7 +10,7 @@ import (
 )
 
 const FILE_PLUGIN_PATH = "./file_keys.so"
-const FILE_PLUGIN_ID = Plugin_Type_File_Id
+const FILE_PLUGIN_ID = krplugin.Plugin_Type_File_Id
 
 func TestPlugin(t *testing.T) {
 	p, err := plugin.Open( FILE_PLUGIN_PATH )

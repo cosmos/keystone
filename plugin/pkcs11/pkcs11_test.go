@@ -9,7 +9,7 @@ import (
 )
 
 const PKCS11_PLUGIN_PATH = "./pkcs11_keys.so"
-const PKCS11_PLUGIN_ID = Plugin_Type_Pkcs11_Id
+const PKCS11_PLUGIN_ID = krplugin.Plugin_Type_Pkcs11_Id
 
 func TestPlugin(t *testing.T) {
 	p, err := plugin.Open( PKCS11_PLUGIN_PATH )

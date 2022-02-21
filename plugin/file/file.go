@@ -15,7 +15,7 @@ import (
 
 	pb "github.com/regen-network/keystone2/keystone"
 	"github.com/frumioj/crypto11"
-	plugin "github.com/regen-network/keystone2/plugin"
+	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
 // PRIVATE functions
@@ -136,7 +136,7 @@ func TypeIdentifier() string {
 	
 // Init initializes this keyring using the passed in file path
 // which should implement the KeyringPlugin interface @@TODO
-func Init(configPath string) (kr plugin.Plugin, err error) {
+func Init(configPath string) (kr krplugin.Plugin, err error) {
 	err = os.MkdirAll(configPath, os.ModePerm)
 
 	if err != nil && !os.IsExist(err) {
