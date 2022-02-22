@@ -14,6 +14,11 @@ import (
 	
 )
 
+func discoverKeyring( plugins []*krplugin.Plugin ) (*krplugin.Plugin, error){
+	// return the first plugin as the keyring for now
+	return plugins[0], nil
+}
+
 type pluginFlags []string
 
 func (i *pluginFlags) String() string {
@@ -46,8 +51,24 @@ func New() (Server, error) {
 func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
 	log.Printf("Receive message body from client: %v", in)
 
-	newLabel := "urn:network.regen.keystone:keystore123:abcde123"
-	return &pb.KeyRef{Label: &newLabel}, nil
+	kr, err := discoverKeyring( s.Plugins )
+
+	if err != nil {
+		return nil, err
+	}
+	
+	spec := pb.KeySpec{
+		Label: "acbde12334",
+		Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
+	}
+	
+	ref, err := (*kr).NewKey(&spec)
+
+	if err != nil {
+		return nil, err
+	} else {
+		return ref, nil
+	}
 }
 
 func (s *server) Key(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
@@ -110,6 +131,7 @@ func main() {
 			
 			if err == nil &&
 				typeId() == krplugin.Plugin_Type_File_Id {
+				log.Printf("Init is %v of type %t", v, v)
 				
 				kr, err = v.(func(string) (kr krplugin.Plugin, err error))( *fileKeyringConfig)
 			} else {
