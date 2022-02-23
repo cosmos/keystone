@@ -57,12 +57,12 @@ func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error)
 		return nil, err
 	}
 	
-	spec := pb.KeySpec{
-		Label: "acbde12334",
-		Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
-	}
+	// spec := pb.KeySpec{
+	// 	Label: "acbde12334",
+	// 	Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
+	// }
 	
-	ref, err := (*kr).NewKey(&spec)
+	ref, err := (*kr).NewKey(in)
 
 	if err != nil {
 		return nil, err
@@ -71,11 +71,26 @@ func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error)
 	}
 }
 
-func (s *server) Key(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
+func (s *server) PubKey(ctx context.Context, in *pb.KeySpec) (*pb.PublicKey, error) {
 	log.Printf("Receive message body from client: %v", in)
 
-	newLabel := "abcde123"
-	return &pb.KeyRef{Label: &newLabel}, nil
+	kr, err := discoverKeyring( s.Plugins )
+
+	if err != nil {
+		return nil, err
+	}
+	
+	// spec := pb.KeySpec{
+	// 	Label: "acbde12334",
+	// }
+	
+	ref, err := (*kr).PubKey(in)
+
+	if err != nil {
+		return nil, err
+	} else {
+		return ref, nil
+	}
 }
 
 func main() {
@@ -98,13 +113,6 @@ func main() {
 		log.Fatalln("Keystone server blockchain address may not be left empty")
 		return
 	}
-
-	//kr, err := hsmkeys.NewPkcs11FromConfig(*pkcs11KeyringConfig)
-
-	//if err != nil {
-	//	log.Fatalln("Failed to initialize keystore")
-	//	return
-	//}
 
 	if len(plugins) <= 0 {
 		log.Fatalln("At least one key-serving plugin libraries MUST be given with -plugin")
@@ -146,9 +154,6 @@ func main() {
 				// move on
 			}
 		}
-
-		log.Printf("ID: %v", typeId())
-		
 	}
 
 	lis, err := net.Listen("tcp", ":"+*grpcListenPort)

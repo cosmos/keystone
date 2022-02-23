@@ -54,10 +54,14 @@ func main() {
 
 	client := keystonepb.NewKeyringClient(cc)
 
-	request := &keystonepb.KeySpec{Label: "regen1fyccfg8ylh79ey2qdtx677k568mn0q3pnkajfk"}
+	request := &keystonepb.KeySpec{Label: "abcde12334",
+		Algo: keystonepb.KeygenAlgorithm_KEYGEN_SECP256R1,}
 
 	resp, _ := client.NewKey(context.Background(), request)
 
-	fmt.Printf("Receive response => [%v]", *resp.Label)
+	fmt.Printf("Receive response => [%v]\n", *resp.Label)
 
+	req2 := &keystonepb.KeySpec{Label: "abcde12334"}
+	resp2, err := client.Pubkey(context.Background(), req2)
+	fmt.Printf("Receive response => [%v]\n", *resp2)
 }
