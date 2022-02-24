@@ -93,6 +93,28 @@ func (s *server) PubKey(ctx context.Context, in *pb.KeySpec) (*pb.PublicKey, err
 	}
 }
 
+func (s *server) Sign(ctx context.Context, msg *pb.Msg) (*pb.Signed, error) {
+
+	log.Printf("Receive message body from client: %v", msg)
+
+	kr, err := discoverKeyring( s.Plugins )
+
+	if err != nil {
+		return nil, err
+	}
+
+	signed, err := (*kr).Sign( msg )
+
+	log.Printf("Send message body to client: %v", signed)
+
+	if err != nil {
+		return nil, err
+	} else {
+		return signed, nil
+	}
+
+}
+
 func main() {
 	var plugins pluginFlags
 	// Retrieve the command line parameters passed in to configure the server

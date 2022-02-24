@@ -62,6 +62,27 @@ func main() {
 	fmt.Printf("Receive response => [%v]\n", *resp.Label)
 
 	req2 := &keystonepb.KeySpec{Label: "abcde12334"}
-	resp2, err := client.Pubkey(context.Background(), req2)
+	resp2, err := client.PubKey(context.Background(), req2)
+
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+	}
+	
 	fmt.Printf("Receive response => [%v]\n", *resp2)
+
+	cleartext := &keystonepb.Signable{Data: &keystonepb.Signable_SignableBytes{[]byte("foo")},}
+	
+	req3 := &keystonepb.Msg{
+		KeySpec: &keystonepb.KeySpec{ Label: "abcde12334",},
+		SigningProfile: keystonepb.SigningProfile_PROFILE_ECDSA_SHA256,
+		Content: cleartext,
+	}
+
+	resp3, err := client.Sign( context.Background(), req3)
+
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+	}
+	
+	fmt.Printf("Receive response => [%v]\n", *resp3)	
 }
