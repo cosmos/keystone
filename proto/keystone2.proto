@@ -85,8 +85,7 @@ message msg {
 // Keyrings have a WKU (ie. a URL you call, that supports this interface)
 service keyring {
   rpc newKey(keySpec)                         returns (keyRef) {} ;
-  rpc key(keySpec)                            returns (keyRef) {} ;
-  rpc pubkey(keySpec)                         returns (publicKey) {} ;
+  rpc pubKey(keySpec)                         returns (publicKey) {} ;
   rpc metadata(keySpec)                       returns (keyMetadata) {} ;
   rpc sign(msg)                               returns (signed) {} ;
 }
