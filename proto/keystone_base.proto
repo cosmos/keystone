@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package keystone;
+option go_package = "./keystone" ;
+
+// keygenAlgorithm is the algorithm that should be used
+// for generating a key - typically the EC curve in use
+// that the key is related to.
+enum keygenAlgorithm {
+  KEYGEN_SECP256K1 = 0 ;
+  KEYGEN_SECP256R1 = 1 ;
+  KEYGEN_ED25519   = 2 ;
+}
+
+enum signingProfile {
+  // ECDSA signing, SHA256 prior to signature, low-s normalization,
+  // and raw r, s values instead of ASN
+  PROFILE_BC_ECDSA_SHA256 = 0 ;
+
+  // ECDSA signing, SHA512 prior to signature, low-s normalization,
+  // and raw r, s values instead of ASN  
+  PROFILE_BC_ECDSA_SHA512 = 1 ;
+
+  // ECDSA signing, SHA256 prior to signature, no normalization, and
+  // standard ASN1 encoding
+  PROFILE_ECDSA_SHA256 =    2 ;
+
+  // ECDSA signing, caller is expected to hash (or not), standard ASN1
+  // encoding
+  PROFILE_ECDSA_NOHASH =    3 ;
+}
+
+message keySpec {
+  int32            id = 1 ;
+  string           label = 2 ;
+  sfixed32         size = 3 ;
+  keygenAlgorithm  algo = 4 ;
+}
+
+message keyMetadata {
+  int32            id = 1 ;
+  int32            keyId = 2 ;
+  sfixed32         size = 3 ;
+  keygenAlgorithm  algo = 4 ;
+}
+
+// label could be a Cosmos (group) address...
+message keyRef {
+  int32            inResponseTo = 1 ;
+  optional string  label = 2 ;
+}
+
+message publicKey {
+  int32            inResponseTo = 1 ;
+  string           label = 2 ;
+  bytes            keyBytes = 3 ;
+}
+
+message signable {
+  oneof data {
+    bytes          signableBytes = 1 ;
+    string         txref = 2 ;
+  }
+}
+
+message signed {
+  int32            inResponseTo = 1 ;
+  oneof data {
+    bytes          signedBytes = 2 ;
+    string         signedTxRef = 3 ;
+    int32          error = 4 ;
+  }
+}
+
+message msg {
+  int32            id = 1 ;
+  keySpec          keySpec = 2 ;
+  signingProfile   signingProfile = 3 ;
+  signable         content = 4 ;
+}
