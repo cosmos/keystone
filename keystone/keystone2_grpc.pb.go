@@ -205,5 +205,5 @@ var Keyring_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/keystone2.proto",
+	Metadata: "keystone2.proto",
 }
