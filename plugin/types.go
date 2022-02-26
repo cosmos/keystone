@@ -32,7 +32,7 @@ type Plugin interface {
 // to allow the asn1 unmarshalling which uses an interface{}
 // type to return the values, instead of just returning the
 // two integers.
-type dsaSignature struct {
+type DsaSignature struct {
 	R, S *big.Int
 }
 
@@ -42,8 +42,8 @@ type dsaSignature struct {
 // it into a (hopefully-appropriate) struct. If the struct
 // given, is not appropriate for the data, then unmarshalling
 // will fail.
-func unmarshalDER(sigDER []byte) (*dsaSignature, error) {
-	var sig dsaSignature
+func UnmarshalDER(sigDER []byte) (*DsaSignature, error) {
+	var sig DsaSignature
 
 	if rest, err := asn1.Unmarshal(sigDER, &sig); err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func unmarshalDER(sigDER []byte) (*dsaSignature, error) {
 // lower half of the curve order
 // It is expected that the caller passes the curve order as a big Int along
 // with the s portion of the signature.
-func isSNormalized(sigS *big.Int, order *big.Int) bool {
+func IsSNormalized(sigS *big.Int, order *big.Int) bool {
 	// return the result of comparing the given s signature
 	// component with half the value of the curve order. If the s
 	// component is less than or equal to half the curve order,
@@ -70,7 +70,7 @@ func isSNormalized(sigS *big.Int, order *big.Int) bool {
 // NormalizeS will invert the s value if not already in the lower half
 // of curve order value by subtracting it from the curve order (N)
 func NormalizeS(sigS *big.Int, curve elliptic.Curve) *big.Int {
-	if isSNormalized(sigS, curve.Params().N) {
+	if IsSNormalized(sigS, curve.Params().N) {
 		return sigS
 	} else {
 		order := curve.Params().N
@@ -81,7 +81,7 @@ func NormalizeS(sigS *big.Int, curve elliptic.Curve) *big.Int {
 // signatureRaw takes two big integers and returns a byte value that
 // is the result of concatenating the byte values of each of the given
 // integers. The byte values are left-padded with zeroes
-func signatureRaw(r *big.Int, s *big.Int) []byte {
+func SignatureRaw(r *big.Int, s *big.Int) []byte {
 
 	rBytes := r.Bytes()
 	sBytes := s.Bytes()
