@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package keystone ;
+option go_package = "./keystone_admin" ;
+
+message keyringSpec {
+  int32            id = 1 ;
+  string           label = 2 ;
+}
+
+message keyringRef {
+  int32            inResponseTo = 1 ;
+  string           label = 2 ;
+}
+
+service keyringAdmin {
+  rpc newKeyring(keyringSpec)                 returns (keyringRef) {} ; 
+}

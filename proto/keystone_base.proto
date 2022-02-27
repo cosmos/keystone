@@ -44,7 +44,6 @@ message keyMetadata {
   keygenAlgorithm  algo = 4 ;
 }
 
-// label could be a Cosmos (group) address...
 message keyRef {
   int32            inResponseTo = 1 ;
   optional string  label = 2 ;
