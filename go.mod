@@ -13,9 +13,10 @@ replace github.com/regen-network/regen-ledger/types => github.com/regen-network/
 replace github.com/regen-network/keystone2 => ./
 
 require (
-	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e // indirect
-	github.com/regen-network/keystone/keys v0.0.0-20220129212613-fb67e4f8db9f // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/cosmos/cosmos-sdk v0.44.2 // indirect
+	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
+	github.com/regen-network/keystone/keys v0.0.0-20220129212613-fb67e4f8db9f
+	github.com/stretchr/testify v1.7.0
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 )
