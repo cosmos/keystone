@@ -11,10 +11,9 @@ import (
 
 	pb "github.com/regen-network/keystone2/keystone"
 	krplugin "github.com/regen-network/keystone2/plugin"
-	
 )
 
-func discoverKeyring( plugins []*krplugin.Plugin ) (*krplugin.Plugin, error){
+func discoverKeyring(plugins []*krplugin.Plugin) (*krplugin.Plugin, error) {
 	// return the first plugin as the keyring for now
 	return plugins[0], nil
 }
@@ -51,17 +50,17 @@ func New() (Server, error) {
 func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error) {
 	log.Printf("Receive message body from client: %v", in)
 
-	kr, err := discoverKeyring( s.Plugins )
+	kr, err := discoverKeyring(s.Plugins)
 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// spec := pb.KeySpec{
 	// 	Label: "acbde12334",
 	// 	Algo: pb.KeygenAlgorithm_KEYGEN_SECP256R1,
 	// }
-	
+
 	ref, err := (*kr).NewKey(in)
 
 	if err != nil {
@@ -74,16 +73,16 @@ func (s *server) NewKey(ctx context.Context, in *pb.KeySpec) (*pb.KeyRef, error)
 func (s *server) PubKey(ctx context.Context, in *pb.KeySpec) (*pb.PublicKey, error) {
 	log.Printf("Receive message body from client: %v", in)
 
-	kr, err := discoverKeyring( s.Plugins )
+	kr, err := discoverKeyring(s.Plugins)
 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// spec := pb.KeySpec{
 	// 	Label: "acbde12334",
 	// }
-	
+
 	ref, err := (*kr).PubKey(in)
 
 	if err != nil {
@@ -97,13 +96,13 @@ func (s *server) Sign(ctx context.Context, msg *pb.Msg) (*pb.Signed, error) {
 
 	log.Printf("Receive message body from client: %v", msg)
 
-	kr, err := discoverKeyring( s.Plugins )
+	kr, err := discoverKeyring(s.Plugins)
 
 	if err != nil {
 		return nil, err
 	}
 
-	signed, err := (*kr).Sign( msg )
+	signed, err := (*kr).Sign(msg)
 
 	log.Printf("Send message body to client: %v", signed)
 
@@ -117,6 +116,7 @@ func (s *server) Sign(ctx context.Context, msg *pb.Msg) (*pb.Signed, error) {
 
 func main() {
 	var plugins pluginFlags
+
 	// Retrieve the command line parameters passed in to configure the server
 	// Most have likely-reasonable defaults.
 	keystoneAddress := flag.String("key-addr", "", "the address associated with the key used to sign transactions on behalf of Keystone")
@@ -158,18 +158,18 @@ func main() {
 			v, err = p.Lookup("Init")
 
 			var kr krplugin.Plugin = nil
-			
+
 			if err == nil &&
 				typeId() == krplugin.Plugin_Type_File_Id {
 				log.Printf("Init is %v of type %t", v, v)
-				
-				kr, err = v.(func(string) (kr krplugin.Plugin, err error))( *fileKeyringConfig)
+
+				kr, err = v.(func(string) (kr krplugin.Plugin, err error))(*fileKeyringConfig)
 			} else {
 				if err == nil && typeId() == krplugin.Plugin_Type_Pkcs11_Id {
-					kr, err = v.(func(string) (kr krplugin.Plugin, err error))( *pkcs11KeyringConfig)
+					kr, err = v.(func(string) (kr krplugin.Plugin, err error))(*pkcs11KeyringConfig)
 				}
 			}
-			
+
 			if err == nil {
 				pluginList = append(pluginList, &kr)
 			} else {

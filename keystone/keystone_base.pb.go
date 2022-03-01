@@ -274,7 +274,6 @@ func (x *KeyMetadata) GetAlgo() KeygenAlgorithm {
 	return KeygenAlgorithm_KEYGEN_SECP256K1
 }
 
-// label could be a Cosmos (group) address...
 type KeyRef struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
