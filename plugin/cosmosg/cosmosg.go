@@ -135,7 +135,9 @@ func createGroup(creatorAddress []byte, memberList []group.Member, metadata stri
 		Metadata: nil,
 	})
 
-	txBuilder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("uregen", 5000)})
+	// @@TODO: abstract the stake fee - will depend on chain
+	// config for example
+	txBuilder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin("stake", 20)})
 	txBuilder.SetGasLimit(50000)
 
 	txFactory := clienttx.Factory{}
@@ -147,7 +149,7 @@ func createGroup(creatorAddress []byte, memberList []group.Member, metadata stri
 	// Only needed for "offline" accounts?
 	//.WithAccountNumber(num).WithSequence(seq)
 
-	info, err := txFactory.Keybase().Key("delegator")
+	info, err := txFactory.Keybase().Key("my-validator")
 
 	if err != nil {
 		return nil, err
@@ -271,15 +273,40 @@ func Init(configPath string) (krplugin.Plugin, error) {
 	}
 }
 
-func (*nodeclient) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
-	// add a group member to the named group
+func (nc *nodeclient) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
+
+	member1 := group.Member{
+		Address: "cosmos1afefp9w2k09zlp6cfhu7gfjgx7usr2zz9pgdrg",
+		Weight:  strconv.Itoa(1),
+	}
+
+	members := []group.Member{ member1 }
+
+	bcContext, err := getLocalContext(nc)
+
+	if err != nil {
+		return nil, err
+	}
+	
+	groupAddr, err := createGroup( []byte("cosmos1afefp9w2k09zlp6cfhu7gfjgx7usr2zz9pgdrg"), members, "", bcContext) 
+
+	strAddress := string(groupAddr)
+	
+	if err != nil {
+		return nil, err
+	}
+
+	ref := pb.KeyRef{
+		Label: &strAddress,
+	}
+
+	return &ref, nil
+}
+
+func (nc *nodeclient) PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
 	return nil, nil
 }
 
-func (*nodeclient) PubKey(in *pb.KeySpec) (*pb.PublicKey, error) {
-	return nil, nil
-}
-
-func (*nodeclient) Sign(in *pb.Msg) (*pb.Signed, error) {
+func (nc *nodeclient) Sign(in *pb.Msg) (*pb.Signed, error) {
 	return nil, nil
 }
