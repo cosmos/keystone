@@ -11,6 +11,7 @@ import (
 
 const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
 const Plugin_Type_File_Id = "urn:network.regen.keystone.plugins:file"
+const Plugin_Type_CosmosG_Id = "urn:network.regen.keystone.plugins:cosmosg"
 
 // Options struct contains anything that is needed for configuring a
 // plugin with one element initially, a path to a configuration, which
