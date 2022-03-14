@@ -1,138 +1,151 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"context"
-	"strconv"
 	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
 
 	"google.golang.org/grpc"
-	
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	acc "github.com/cosmos/cosmos-sdk/x/auth/types"
-	
-	krplugin "github.com/regen-network/keystone2/plugin"
+	"github.com/cosmos/cosmos-sdk/x/group"
+
 	pb "github.com/regen-network/keystone2/keystone"
+	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
 var nc *nodeclient = nil
 
 type nodeclient struct {
-	chainId         string `json:"chainId"`
-	serverAddress   string `json:"serverAddress"`
-	keyringDir      string `json:"keyringDir"`	
-	rpcUri          string `json:"rpcUri"`
+	ChainId       string `json:"chainId"`
+	ServerAddress string `json:"serverAddress"`
+	KeyringDir    string `json:"keyringDir"`
+	RpcUri        string `json:"rpcUri"`
 }
 
 // private methods
 
 func loadConfiguration(pathtoconfig string) (*nodeclient, error) {
-	var config *nodeclient
+	var cf *nodeclient
 	configFile, err := os.Open(pathtoconfig)
 	defer configFile.Close()
-	
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
-	
+
 	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
-	return config, nil
+	jsonParser.Decode(&cf)
+
+	log.Printf("Server Address loaded: %s", cf.ServerAddress)
+	log.Printf("Chain loaded: %s", cf.ChainId)
+	log.Printf("Keyring dir loaded: %s", cf.KeyringDir)
+
+	return cf, nil
 }
 
 // how to retrieve node context beyond this one transaction?
 func getLocalContext(nc *nodeclient) (*client.Context, error) {
 
-	addr, err := sdk.AccAddressFromBech32(nc.serverAddress)
+	addr, err := sdk.AccAddressFromBech32(nc.ServerAddress)
 	encodingConfig := simapp.MakeTestEncodingConfig()
 
 	if err != nil {
 		return nil, err
 	}
 
-	rpcclient, err := client.NewClientFromNode(nc.rpcUri)
+	rpcclient, err := client.NewClientFromNode(nc.RpcUri)
 
 	if err != nil {
+		log.Printf("could not get rpcclient: %v", err)
 		return nil, err
 	}
 
 	//@@TODO configure keyring.BackendTest using the server-global context, not hardcode
-	k, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, nc.keyringDir, nil, encodingConfig.Codec)
-
-	// l, err := k.List()
-
-	// fmt.Printf("%v", l)
+	kb, err := keyring.New("keystone", keyring.BackendTest, nc.KeyringDir, nil, encodingConfig.Codec)
 
 	if err != nil {
-		fmt.Printf("error opening keyring: ", err)
+		log.Printf("error opening keyring: %v", err)
+		return nil, err
+	} else {
+		log.Printf("keyring: %v", kb)
+	}
+
+	l, err := kb.List()
+
+	if err != nil || len(l) < 1 {
+		log.Println("error retrieving keys")
 		return nil, err
 	}
 
-	c := client.Context{FromAddress: addr, ChainID: nc.chainId}.
+	log.Printf("Keys?: %v\n", l)
+
+	c := client.Context{FromAddress: addr, ChainID: nc.ChainId}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithBroadcastMode(flags.BroadcastSync).
-		WithNodeURI(nc.rpcUri).
+		WithNodeURI(nc.RpcUri).
 		WithAccountRetriever(acc.AccountRetriever{}).
 		WithClient(rpcclient).
-		WithKeyringDir(nc.keyringDir).
+		WithKeyringDir(nc.KeyringDir).
 		WithKeyring(k)
 
 	return &c, nil
 }
 
 func createAdminGroup(creatorAddress []byte, memberList []group.Member, metadata string, localContext *client.Context) ([]byte, error) {
-	return createGroup( creatorAddress, memberList, metadata, localContext )
+	return createGroup(creatorAddress, memberList, metadata, localContext)
 }
 
 // CreateGroup creates a Cosmos Group using the MsgCreateGroup, filling the message with the input fields
 func createGroup(creatorAddress []byte, memberList []group.Member, metadata string, localContext *client.Context) ([]byte, error) {
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
+	//encCfg := simapp.MakeTestEncodingConfig()
+	txBuilder := localContext.TxConfig.NewTxBuilder()
 
 	// @@todo, how to get the private key from the keyring
 	// associated with this address?
 	adminAddr, err := sdk.AccAddressFromBech32(string(creatorAddress))
 
 	if err != nil {
-		fmt.Printf("Error converting address string: ", err)
+		log.Printf("Error converting address string: %v", err)
 		return nil, err
 	}
 
-	err = localContext.AccountRetriever.EnsureExists(*localContext, adminAddr)
+	// err = localContext.AccountRetriever.EnsureExists(*localContext, adminAddr)
 
-	if err != nil {
-		fmt.Println("Account does not exist because: ", err)
-		return nil, err
-	}
+	// if err != nil {
+	//  	log.Println("Account does not exist because:", err)
+	//  	return nil, err
+	// }
 
-	num, seq, err := localContext.AccountRetriever.GetAccountNumberSequence(*localContext, adminAddr)
+	// num, seq, err := localContext.AccountRetriever.GetAccountNumberSequence(*localContext, adminAddr)
 
-	if err != nil {
-		fmt.Printf("Error retrieving account number/sequence: ", err)
-		return nil, err
-	} else {
-		fmt.Printf("Account retrieved: %v with seq: %v", num, seq)
-	}
+	// if err != nil {
+	// 	fmt.Printf("Error retrieving account number/sequence: %v", err)
+	// 	return nil, err
+	// } else {
+	// 	fmt.Printf("Account retrieved: %v with seq: %v", num, seq)
+	// }
 
-	//txBuilder := localContext.TxConfig.NewTxBuilder()
 	txBuilder.SetMsgs(&group.MsgCreateGroup{
-		Admin:    adminAddr.String(),
-		Members:  memberList,
-		Metadata: nil,
+		Admin:   adminAddr.String(),
+		Members: memberList,
+		//Metadata: "",
 	})
 
 	// @@TODO: abstract the stake fee - will depend on chain
@@ -144,12 +157,12 @@ func createGroup(creatorAddress []byte, memberList []group.Member, metadata stri
 	txFactory = txFactory.
 		WithChainID(localContext.ChainID).
 		WithKeybase(localContext.Keyring).
-		WithTxConfig(encCfg.TxConfig)
+		WithTxConfig(localContext.TxConfig)
 
 	// Only needed for "offline" accounts?
 	//.WithAccountNumber(num).WithSequence(seq)
 
-	info, err := txFactory.Keybase().Key("my-validator")
+	info, err := txFactory.Keybase().Key("my_validator")
 
 	if err != nil {
 		return nil, err
@@ -220,7 +233,7 @@ func createGroup(creatorAddress []byte, memberList []group.Member, metadata stri
 	defer grpcConn.Close()
 
 	// @@TODO: configure broadcast mode from server-global context?
-	
+
 	txClient := tx.NewServiceClient(grpcConn)
 
 	res, err := txClient.BroadcastTx(
@@ -247,24 +260,28 @@ func createGroup(creatorAddress []byte, memberList []group.Member, metadata stri
 }
 
 //adminMembers returns a []group.Member with two members
-func adminMembers( addr1 string, addr2 string ) []group.Member{
-	
+func adminMembers(addr1 string, addr2 string) []group.Member {
+
 	member1 := group.Member{
-		Address:  addr1,
-		Weight:   strconv.Itoa(1),
+		Address: addr1,
+		Weight:  strconv.Itoa(1),
 	}
 
 	member2 := group.Member{
-		Address:  addr2,
-		Weight:   strconv.Itoa(1),
+		Address: addr2,
+		Weight:  strconv.Itoa(1),
 	}
-	
+
 	return []group.Member{member1, member2}
+}
+
+func TypeIdentifier() string {
+	return krplugin.Plugin_Type_CosmosG_Id
 }
 
 func Init(configPath string) (krplugin.Plugin, error) {
 
-	nc, err := loadConfiguration( configPath )
+	nc, err := loadConfiguration(configPath)
 
 	if err != nil {
 		return nil, err
@@ -276,25 +293,31 @@ func Init(configPath string) (krplugin.Plugin, error) {
 func (nc *nodeclient) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 
 	member1 := group.Member{
-		Address: "cosmos1afefp9w2k09zlp6cfhu7gfjgx7usr2zz9pgdrg",
+		Address: "cosmos16puqhqxr0zj3r374t64qmj2g8ke2sgrwjwq9s6",
 		Weight:  strconv.Itoa(1),
 	}
 
-	members := []group.Member{ member1 }
+	members := []group.Member{member1}
+
+	log.Printf("Server address: %s", nc.ServerAddress)
 
 	bcContext, err := getLocalContext(nc)
 
 	if err != nil {
+		log.Printf("generate local blockchain context failed %v", err)
 		return nil, err
 	}
-	
-	groupAddr, err := createGroup( []byte("cosmos1afefp9w2k09zlp6cfhu7gfjgx7usr2zz9pgdrg"), members, "", bcContext) 
+
+	log.Printf("now trying to create the group")
+
+	groupAddr, err := createGroup([]byte("cosmos16puqhqxr0zj3r374t64qmj2g8ke2sgrwjwq9s6"), members, "", bcContext)
+
+	if err != nil {
+		log.Printf("group add failed: %v", err)
+		return nil, err
+	}
 
 	strAddress := string(groupAddr)
-	
-	if err != nil {
-		return nil, err
-	}
 
 	ref := pb.KeyRef{
 		Label: &strAddress,
