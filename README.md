@@ -13,35 +13,42 @@ Keystone is a key management system. It provides a key management server, offeri
 
 2. Setup your go-lang environment reasonably
 
-`export GOROOT=/usr/local/go`
-`export GOPATH=$HOME/go`
-`export PATH="${GOPATH}/bin:$GOROOT/bin:${PATH}"`
+```
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH="${GOPATH}/bin:$GOROOT/bin:${PATH}"
+```
 
 3. Clone the repo (which also means for now first cloning the Cosmos SDK)
 
-`git clone https://github.com/frumioj/cosmos-sdk.git`
-`git clone https://github.com/frumioj/keystone.git`
+```
+git clone https://github.com/frumioj/cosmos-sdk.git
+git clone https://github.com/frumioj/keystone.git
+```
 
 # Build Keystone (I will make this easier one day - promise!)
 
-
-`cd keystone`
+`cd keystone`, and then
 `go mod tidy` to ensure dependencies are in order
 
 Keystone requires building at least one key-providing plugin. There (as of today) two plugins:
 
-`cd plugin/file`
-`go build -buildmode=plugin -o file_keys.so file.go`
-`cd ../pkcs11`
-`go build -buildmode=plugin -o pkcs11_keys.so pkcs11.go`
+```
+cd plugin/file
+go build -buildmode=plugin -o file_keys.so file.go
+cd ../pkcs11
+go build -buildmode=plugin -o pkcs11_keys.so pkcs11.go
+```
 
-`cd ../..`
-`make build`
+Back up to the top level:
+
+```
+cd ../..
+make build
+```
 
 # Running the keystone server
 
 This line will run Keystone with support for filesystem-based keys where the keys are stored in the given directory:
 
 `./keystoned -chain-id foo -chain-rpc none -key-addr none -keyring-dir none -keyring-type none -key-plugin ./plugin/file/file_keys.so -file-cfg /home/johnk/src/keystoned2/plugin/file/keys/`
-
-|
