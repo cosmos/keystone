@@ -19,9 +19,9 @@ replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk
 require (
 	github.com/cosmos/cosmos-sdk v0.46.0-alpha3
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
+	github.com/gin-gonic/gin v1.7.0 // indirect
 	github.com/regen-network/keystone/keys v0.0.0-20220129212613-fb67e4f8db9f
-	github.com/stretchr/testify v1.7.0
-	google.golang.org/grpc v1.44.0
-	google.golang.org/protobuf v1.27.1
-	github.com/gin-gonic/gin v1.7.0
+	github.com/stretchr/testify v1.7.1
+	google.golang.org/grpc v1.45.0
+	google.golang.org/protobuf v1.28.0
 )
