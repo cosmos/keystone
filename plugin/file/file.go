@@ -244,12 +244,12 @@ func (kr *keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 		var digested []byte
 
 		if in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA256 ||
-			in.SigningProfile == pb.SigningProfile_PROFILE_ECDSA_SHA256 {
+			in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA256 {
 			digest := sha256.Sum256(cleartext)
 			digested = digest[:]
 		} else {
 			if in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 ||
-				in.SigningProfile == pb.SigningProfile_PROFILE_ECDSA_SHA512 {
+				in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 {
 				digest := sha512.Sum512(cleartext)
 				digested = digest[:]
 			} else {
@@ -257,6 +257,7 @@ func (kr *keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 			}
 		}
 
+		var signature []byte
 		signature, err := key.Sign(rand.Reader, digested, nil)
 
 		if err != nil {
@@ -269,14 +270,14 @@ func (kr *keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 			in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 {
 
 			var rawsig *krplugin.DsaSignature
-			rawsig, err := krplugin.UnmarshalDER(sigbytes)
+			rawsig, err := krplugin.UnmarshalDER(signature)
 
 			if err != nil {
 				log.Printf("Error getting ints from DER: %s", err.Error())
 				return nil, err
 			}
 
-			signature := krplugin.SignatureRaw(rawsig.R, krplugin.NormalizeS(rawsig.S, crypto11.P256K1()))
+			signature = krplugin.SignatureRaw(rawsig.R, krplugin.NormalizeS(rawsig.S, crypto11.P256K1()))
 		}
 
 		signedBytes := pb.Signed_SignedBytes{
