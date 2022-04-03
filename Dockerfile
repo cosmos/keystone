@@ -13,3 +13,7 @@ RUN git clone https://github.com/frumioj/keystone.git
 WORKDIR keystone
 RUN go mod tidy
 RUN make build
+WORKDIR /keystone/plugin/file
+RUN go build -buildmode=plugin -o file_keys.so file.go
+WORKDIR /keystone/plugin/pkcs11
+RUN go build -buildmode=plugin -o pkcs11_keys.so pkcs11.go
