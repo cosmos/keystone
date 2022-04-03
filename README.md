@@ -52,3 +52,9 @@ make build
 This line will run Keystone with support for filesystem-based keys where the keys are stored in the given directory:
 
 `./keystoned -chain-id foo -chain-rpc none -key-addr none -keyring-dir none -keyring-type none -key-plugin ./plugin/file/file_keys.so -file-cfg /home/johnk/src/keystoned2/plugin/file/keys/`
+
+# Dockerfile
+
+There is a Dockerfile in this directory, which implements most of the instructions in here, and can be used to build a Keystone server with:
+
+`docker build .`
