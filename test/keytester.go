@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"log"
+	"context"
 
 	"crypto/rand"
 	"google.golang.org/grpc"
@@ -19,7 +20,7 @@ func randomBytes(size int) (blk []byte, err error) {
     return
 }
 
-func initKeys(server string) *keystonepb.KeyringClient {
+func initKeys(server string) *grpc.ClientConn {
 	fmt.Println("Keystone client ...")
 	
 	opts := grpc.WithInsecure()
@@ -29,12 +30,8 @@ func initKeys(server string) *keystonepb.KeyringClient {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
-	defer cc.Close()
 
-	client := keystonepb.NewKeyringClient(cc)
-
-	return &client
+	return cc
 }
 
 func main() {
@@ -43,6 +40,8 @@ func main() {
 	var sign bool
 	var algo string
 	var profile string
+	var cc *grpc.ClientConn
+	//var client keystonepb.KeyringClient
 	
 	flag.BoolVar(&createKey, "create", false, "create a new key")
 	flag.BoolVar(&sign, "sign", false, "sign something with a key")
@@ -50,11 +49,32 @@ func main() {
 	flag.StringVar(&profile, "profile", "PROFILE_BC_ECDSA256", "PROFILE_BC_ECDSA256 | PROFILE_ECDSA256")
 	flag.Parse()
 
-	client := initKeys("localhost:8080")
+	cc = initKeys("localhost:8080")
+	client := keystonepb.NewKeyringClient(cc)
+
+	defer cc.Close()
 	
 	if createKey == true {
-		fmt.Printf("client: %v", client)
-		//client.NewKey( context.Background(), key(
+		//fmt.Printf("client: %v", client)
+
+		labelBytes, err := randomBytes(16)
+		
+		label := fmt.Sprintf("%x",labelBytes)
+
+		if err != nil {
+			log.Fatalf("Error creating key: %v", err)
+		}
+		
+		request := &keystonepb.KeySpec{Label: label,
+			Algo: keystonepb.KeygenAlgorithm_KEYGEN_SECP256R1,}
+		
+		keyref, err := client.NewKey( context.Background(), request )
+		
+		if err != nil {
+			log.Fatalf("Error creating key: %v", err)
+		}
+
+		fmt.Printf("New key: %s\n", *keyref.Label)
 	}
 	
 	if sign == true {
