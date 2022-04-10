@@ -21,8 +21,7 @@ func randomBytes(size int) (blk []byte, err error) {
 }
 
 func initKeys(server string) *grpc.ClientConn {
-	fmt.Println("Keystone client ...")
-	
+
 	opts := grpc.WithInsecure()
 	
 	cc, err := grpc.Dial(server, opts)
@@ -38,17 +37,21 @@ func main() {
 	
 	var createKey bool
 	var sign bool
+	var pubkey bool
+	
 	var algo string
 	var profile string
 	var cc *grpc.ClientConn
-	//var client keystonepb.KeyringClient
 	
 	flag.BoolVar(&createKey, "create", false, "create a new key")
 	flag.BoolVar(&sign, "sign", false, "sign something with a key")
+	flag.BoolVar(&pubkey, "key", false, "get the public key for a private key")
+	
 	flag.StringVar(&algo, "algo", "KEYGEN_SECP256K1", "KEYGEN_SECP256K1 | KEYGEN_SECP256R1")
 	flag.StringVar(&profile, "profile", "PROFILE_BC_ECDSA256", "PROFILE_BC_ECDSA256 | PROFILE_ECDSA256")
-	flag.Parse()
 
+	flag.Parse()
+	
 	cc = initKeys("localhost:8080")
 	client := keystonepb.NewKeyringClient(cc)
 
@@ -75,6 +78,27 @@ func main() {
 		}
 
 		fmt.Printf("New key: %s\n", *keyref.Label)
+	}
+
+	if pubkey == true {
+		keyname := flag.Args()[0]
+
+		if len(keyname) == 0 {
+			fmt.Println("Usage: program_name [-key] keyname")
+			flag.PrintDefaults()
+			os.Exit(1)
+		} else {
+			request := &keystonepb.KeySpec{Label: keyname}
+			
+			pubKey, err := client.PubKey( context.Background(), request )
+			
+			if err != nil {
+				log.Fatalf("Error getting key: %v", err)
+			}
+
+			fmt.Printf("%x\n", pubKey.KeyBytes)
+		}
+		
 	}
 	
 	if sign == true {
