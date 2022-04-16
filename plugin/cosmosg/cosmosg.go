@@ -102,7 +102,7 @@ func getLocalContext(nc *nodeclient) (*client.Context, error) {
 		WithAccountRetriever(acc.AccountRetriever{}).
 		WithClient(rpcclient).
 		WithKeyringDir(nc.KeyringDir).
-		WithKeyring(k)
+		WithKeyring(kb)
 
 	return &c, nil
 }
