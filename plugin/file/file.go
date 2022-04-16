@@ -244,12 +244,11 @@ func (kr *keyring) Sign(in *pb.Msg) (*pb.Signed, error) {
 		var digested []byte
 
 		if in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA256 ||
-			in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA256 {
+			in.SigningProfile == pb.SigningProfile_PROFILE_ECDSA_SHA256 {
 			digest := sha256.Sum256(cleartext)
 			digested = digest[:]
 		} else {
-			if in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 ||
-				in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 {
+			if in.SigningProfile == pb.SigningProfile_PROFILE_BC_ECDSA_SHA512 {
 				digest := sha512.Sum512(cleartext)
 				digested = digest[:]
 			} else {
