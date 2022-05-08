@@ -6,10 +6,18 @@ Keystone is a key management system. It provides a key management server, offeri
 
 1. Install the basics for building software with go-lang (minimum version as of today is 1.17)
 
-`apt -y update && apt -y install build-essential wget git`
-`wget https://dl.google.com/go/go1.17.7.linux-amd64.tar.gz`
-`tar -xvf go1.17.7.linux-amd64.tar.gz`
-`mv go /usr/local`
+```
+apt -y update && apt -y install build-essential wget git
+wget https://dl.google.com/go/go1.17.7.linux-amd64.tar.gz
+tar -xvf go1.17.7.linux-amd64.tar.gz
+mv go /usr/local
+```
+...and install protocol buffers support:
+```
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+protoc --version
+```
 
 2. Setup your go-lang environment reasonably
 
