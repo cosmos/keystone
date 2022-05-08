@@ -58,3 +58,20 @@ This line will run Keystone with support for filesystem-based keys where the key
 There is a Dockerfile in this directory, which implements most of the instructions in here, and can be used to build a Keystone server with:
 
 `docker build .`
+
+# Using keystone
+
+In the `test` directory is a test program that can be used once you have started the keystone server (see above).
+
+```
+cd test
+go build keytester.go
+./keytester --help
+```
+
+You can create a new key (make sure you copy the label you is displayed on the screen if you wish to use the key!)
+
+```
+[johnk@fedora test]$ ./keytester -create
+New key: eb1966c335055ded66febcfb277f221
+```
