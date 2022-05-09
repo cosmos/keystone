@@ -35,7 +35,7 @@ message keySpec {
   string           label = 2 ;
   sfixed32         size = 3 ;
   keygenAlgorithm  algo = 4 ;
-  uint32           keyringId = 5 ;
+  string           keyringId = 5 ;
 }
 
 message keyMetadata {
