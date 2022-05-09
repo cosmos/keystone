@@ -46,9 +46,9 @@ message keyMetadata {
 }
 
 message keyRef {
-  int32            inResponseTo = 1 ;
-  optional string  label = 2 ;
-  uint32           keyringId = 3 ;
+  uint64           inResponseTo = 1 ;
+  string           label = 2 ;
+  string           keyringId = 3 ;
 }
 
 message publicKey {
