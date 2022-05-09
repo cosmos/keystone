@@ -4,15 +4,21 @@ package keystone ;
 option go_package = "./keystone_admin" ;
 
 message keyringSpec {
-  int32            id = 1 ;
-  string           label = 2 ;
+  uint64            id = 1 ;
+  string            label = 2 ;
 }
 
 message keyringRef {
-  int32            inResponseTo = 1 ;
-  string           label = 2 ;
+  uint64            inResponseTo = 1 ;
+  string            label = 2 ;
+}
+
+message keyrefList {
+  uint64            inResponseTo = 1 ;
+  repeated string   label = 2 ;
 }
 
 service keyringAdmin {
-  rpc newKeyring(keyringSpec)                 returns (keyringRef) {} ; 
+  rpc newKeyring(keyringSpec)                 returns (keyringRef) {} ;
+  rpc listKeys(keyringSpec)                   returns (keyrefList) {} ;
 }
