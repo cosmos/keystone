@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/regen-network/keystone2/keystone"
+	adminpb "github.com/regen-network/keystone2/keystone_admin"
+	
 	krplugin "github.com/regen-network/keystone2/plugin"
 )
 
@@ -29,10 +31,14 @@ func (i *pluginFlags) Set(value string) error {
 	return nil
 }
 
-type Server = pb.KeyringServer
+type Server interface {
+	pb.KeyringServer
+	adminpb.KeyringAdminServer
+}
 
 type server struct {
 	pb.UnimplementedKeyringServer
+	adminpb.UnimplementedKeyringAdminServer
 	ServerAddress string
 	ChainID       string
 	KeyringType   string
@@ -112,6 +118,19 @@ func (s *server) Sign(ctx context.Context, msg *pb.Msg) (*pb.Signed, error) {
 		return signed, nil
 	}
 
+}
+
+func (s *server) NewKeyring(ctx context.Context, msg *adminpb.KeyringSpec) (*adminpb.KeyringRef, error) {
+	
+	log.Printf("Receive message body from client: %v", msg)
+
+	// stub! @@TODO
+	spec := adminpb.KeyringRef{
+		InResponseTo: msg.Id,
+	 	Label: "acbde12334",
+	}
+
+	return &spec, nil
 }
 
 func main() {
@@ -196,7 +215,7 @@ func main() {
 
 	s := grpc.NewServer()
 	pb.RegisterKeyringServer(s, &ss)
-
+	
 	s.Serve(lis)
 	return
 
