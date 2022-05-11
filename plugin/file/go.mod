@@ -1,16 +1,16 @@
-module github.com/frumioj/keystone/plugin/file
+module github.com/cosmos/keystone/plugin/file
 
 go 1.17
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/regen-network/keystone2 => ../../
+replace github.com/cosmos/keystone => ../../
 
 replace github.com/frumioj/crypto11 => ../../../crypto11
 
 require (
+	github.com/cosmos/keystone v0.0.0-00010101000000-000000000000
 	github.com/frumioj/crypto11 v0.0.0-00010101000000-000000000000
-	github.com/regen-network/keystone2 v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.7.1
 )
 

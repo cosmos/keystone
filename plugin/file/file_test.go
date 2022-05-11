@@ -5,8 +5,8 @@ import (
 	"plugin"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/regen-network/keystone2/keystone"
-	krplugin "github.com/regen-network/keystone2/plugin"
+	pb "github.com/cosmos/keystone/keystone"
+	krplugin "github.com/cosmos/keystone/plugin"
 )
 
 const FILE_PLUGIN_PATH = "./file_keys.so"

@@ -14,8 +14,8 @@ import (
 	"os"
 
 	"github.com/frumioj/crypto11"
-	pb "github.com/regen-network/keystone2/keystone"
-	krplugin "github.com/regen-network/keystone2/plugin"
+	pb "github.com/cosmos/keystone/keystone"
+	krplugin "github.com/cosmos/keystone/plugin"
 )
 
 // PRIVATE functions
@@ -187,7 +187,7 @@ func (kr *keyring) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 
 	// @@TODO: what should the label be really?
 	ref := pb.KeyRef{
-		Label: &in.Label,
+		Label: in.Label,
 	}
 
 	return &ref, nil
