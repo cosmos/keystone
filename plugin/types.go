@@ -6,7 +6,7 @@ import (
 	"encoding/asn1"
 	"crypto/elliptic"
 
-	pb "github.com/regen-network/keystone2/keystone"
+	pb "github.com/cosmos/keystone/keystone"
 )
 
 const Plugin_Type_Pkcs11_Id = "urn:network.regen.keystone.plugins:pkcs11"
