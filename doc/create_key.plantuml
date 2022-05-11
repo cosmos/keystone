@@ -1,0 +1,6 @@
+@startuml
+Client -> Keystone : create key (client_half)
+Keystone -> Keystone : generate (server_half) 
+Keystone -> Resolved : store (client_half, server_half, timestamp)
+Keystone -> Client : keyref( client_half+server_half )
+@enduml
