@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"errors"
-	pb "github.com/regen-network/keystone2/keystone"
+	pb "github.com/cosmos/keystone/keystone"
 	hsmkeys "github.com/regen-network/keystone/keys"
-	krplugin "github.com/regen-network/keystone2/plugin"
+	krplugin "github.com/cosmos/keystone/plugin"
 )
 
 var kr *keyring = nil
@@ -54,7 +54,7 @@ func (*keyring) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 		}
 		
 		ref := pb.KeyRef{
-			Label: &key.Label,
+			Label: key.Label,
 		}
 	
 		return &ref, nil

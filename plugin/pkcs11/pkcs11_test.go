@@ -4,8 +4,8 @@ import (
 	"testing"
 	"plugin"
 	"github.com/stretchr/testify/require"
-	krplugin "github.com/regen-network/keystone2/plugin"
-	pb "github.com/regen-network/keystone2/keystone"
+	krplugin "github.com/cosmos/keystone/plugin"
+	pb "github.com/cosmos/keystone/keystone"
 )
 
 const PKCS11_PLUGIN_PATH = "./pkcs11_keys.so"
