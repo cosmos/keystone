@@ -21,8 +21,8 @@ import (
 	acc "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 
-	pb "github.com/regen-network/keystone2/keystone"
-	krplugin "github.com/regen-network/keystone2/plugin"
+	pb "github.com/cosmos/keystone/keystone"
+	krplugin "github.com/cosmos/keystone/plugin"
 )
 
 var nc *nodeclient = nil
@@ -320,7 +320,7 @@ func (nc *nodeclient) NewKey(in *pb.KeySpec) (*pb.KeyRef, error) {
 	strAddress := string(groupAddr)
 
 	ref := pb.KeyRef{
-		Label: &strAddress,
+		Label: strAddress,
 	}
 
 	return &ref, nil

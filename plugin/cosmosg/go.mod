@@ -1,17 +1,16 @@
-module github.com/frumioj/keystone/plugin/cosmosg
+module github.com/cosmos/keystone/plugin/cosmosg
 
 go 1.17
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/regen-network/keystone2 => ../../
+replace github.com/cosmos/keystone => ../../
 
 replace github.com/cosmos/cosmos-sdk => ../../../cosmos-sdk
 
 require (
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
-	github.com/regen-network/keystone2 v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.7.1
+	github.com/cosmos/keystone v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.45.0
 )
 
@@ -115,6 +114,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
+	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
