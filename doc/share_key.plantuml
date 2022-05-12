@@ -1,0 +1,13 @@
+@startuml
+Client -> Keystone : share key (client_half+server_half, client_promise)
+Keystone -> Keystone : generate (server_promise) 
+Keystone -> Promised : store (client_half+server_half, client_promise+server_promise, timestamp)
+Keystone -> Client : shareref(client_promise+server_promise)
+Client -> Shared : OOB (client_promise+server_promise)
+Shared -> Shared : generate (client_half)
+Shared -> Keystone : resolve (client_half, client_promise+server_promise)
+Keystone -> Promised : resolve (client_promise+server_promise)
+Keystone -> Keystone : generate (server_half)
+Keystone -> Resolved : store (client_half+server_half, timestamp)
+Keystone -> Client : keyref( client_half+server_half )
+@enduml
