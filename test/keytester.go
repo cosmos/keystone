@@ -13,28 +13,10 @@ import (
 	"crypto/rand"
 	"google.golang.org/grpc"
 
-	keystonepb "github.com/regen-network/keystone2/keystone"
-	keystoneadminpb "github.com/regen-network/keystone2/keystone_admin"
+	"github.com/cosmos/keystone/utils"
+	keystonepb "github.com/cosmos/keystone/keystone"
+	keystoneadminpb "github.com/cosmos/keystone/keystone_admin"
 )
-
-// randomBytes returns up to <size> crypto-random bytes
-func randomBytes(size int) (blk []byte, err error) {
-    blk = make([]byte, size)
-    _, err = rand.Read(blk)
-    return
-}
-
-// randomUint64 returns a crypto-random integer between 0 and the
-// maximum possible unsigned 64 bit integer.
-func randomUint64() (rnd uint64, err error) {
-	bigInt, err := rand.Int( rand.Reader, new(big.Int).SetUint64(math.MaxUint64) )
-
-	if err != nil {
-		return 0, err
-	}
-	
-	return bigInt.Uint64(), nil
-}
 
 // initKeys initializes the connection to the keystone server
 func initKeys(server string) *grpc.ClientConn {

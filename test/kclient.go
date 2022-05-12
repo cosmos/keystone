@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	keystonepb "github.com/regen-network/keystone2/keystone"
+	keystonepb "github.com/cosmos/keystone/keystone"
 )
 
 /*
