@@ -9,10 +9,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/regen-network/keystone2/keystone"
-	adminpb "github.com/regen-network/keystone2/keystone_admin"
+	pb "github.com/cosmos/keystone/keystone"
+	adminpb "github.com/cosmos/keystone/keystone_admin"
 	
-	krplugin "github.com/regen-network/keystone2/plugin"
+	krplugin "github.com/cosmos/keystone/plugin"
 )
 
 func discoverKeyring(plugins []*krplugin.Plugin) (*krplugin.Plugin, error) {
