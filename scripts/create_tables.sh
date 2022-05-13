@@ -1,3 +1,16 @@
+#!/bin/sh
+
+# Create dynamodb tables on LOCAL DynamoDB instance and first delete
+# them if they already exist
+
+aws dynamodb delete-table \
+    --table-name Resolved \
+    --endpoint-url http://localhost:8000
+
+aws dynamodb delete-table \
+    --table-name Promised \
+    --endpoint-url http://localhost:8000
+
 aws dynamodb create-table \
     --table-name Resolved \
     --attribute-definitions \
