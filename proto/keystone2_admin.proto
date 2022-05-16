@@ -11,6 +11,9 @@ message keyringSpec {
 message keyringRef {
   uint64            inResponseTo = 1 ;
   string            label = 2 ;
+  string            issuerUrl = 3 ;
+  uint64            expires = 4 ;
+  string            issuerIdUrl = 5 ;
 }
 
 message keyrefList {

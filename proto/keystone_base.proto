@@ -49,6 +49,9 @@ message keyRef {
   uint64           inResponseTo = 1 ;
   string           label = 2 ;
   string           keyringId = 3 ;
+  string           issuerUrl = 4 ;
+  uint64           expires = 5 ;
+  string           issuerIdUrl = 6 ;
 }
 
 message publicKey {
