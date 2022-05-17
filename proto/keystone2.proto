@@ -9,6 +9,7 @@ option go_package = "./keystone" ;
 // One day, that might change...
 // Keyrings have a WKU (ie. a URL you call, that supports this interface)
 service keyring {
+  rpc helo()                                  returns (ehlo) {} ;
   rpc newKey(keySpec)                         returns (keyRef) {} ;
   rpc pubKey(keySpec)                         returns (publicKey) {} ;
   rpc key(keySpec)                            returns (keyRef) {} ;
