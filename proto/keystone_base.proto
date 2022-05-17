@@ -31,22 +31,22 @@ enum signingProfile {
 }
 
 message helo {
-  int64            id = 1 ;
+  uint64           id = 1 ;
   bytes            publicKey = 2 ;
   bytes            encTimestamp = 3 ;
   bytes            signedIdKey = 4 ;
 }
 
 message ehlo {
-  int64            id = 1 ;
-  int64            inResponseTo = 2 ;
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
   bytes            publicKey = 3 ;
   bytes            encTimestamp = 4 ;
   bytes            signedIdKey = 5 ;
 }
 
 message keySpec {
-  int32            id = 1 ;
+  uint64           id = 1 ;
   string           label = 2 ;
   sfixed32         size = 3 ;
   keygenAlgorithm  algo = 4 ;
@@ -54,28 +54,32 @@ message keySpec {
 }
 
 message keyMetadata {
-  int32            id = 1 ;
-  int32            keyId = 2 ;
-  sfixed32         size = 3 ;
-  keygenAlgorithm  algo = 4 ;
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
+  uint64           keyId = 3 ;
+  sfixed32         size = 4 ;
+  keygenAlgorithm  algo = 5 ;
 }
 
 message keyRef {
-  uint64           inResponseTo = 1 ;
-  string           label = 2 ;
-  string           keyringId = 3 ;
-  string           issuerUrl = 4 ;
-  uint64           expires = 5 ;
-  string           issuerIdUrl = 6 ;
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
+  string           label = 3 ;
+  string           keyringId = 4 ;
+  string           issuerUrl = 5 ;
+  uint64           expires = 6 ;
+  string           issuerIdUrl = 7 ;
 }
 
 message publicKey {
-  int32            inResponseTo = 1 ;
-  string           label = 2 ;
-  bytes            keyBytes = 3 ;
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
+  string           label = 3 ;
+  bytes            keyBytes = 4 ;
 }
 
 message signable {
+  uint64           id = 1 ;
   oneof data {
     bytes          signableBytes = 1 ;
     string         txref = 2 ;
@@ -83,16 +87,18 @@ message signable {
 }
 
 message signed {
-  int32            inResponseTo = 1 ;
+  uint64           id = 1 ;       
+  uint64           inResponseTo = 2 ;
   oneof data {
-    bytes          signedBytes = 2 ;
-    string         signedTxRef = 3 ;
-    int32          error = 4 ;
+    bytes          signedBytes = 3 ;
+    string         signedTxRef = 4 ;
+    int32          error = 5 ;
   }
 }
 
 message msg {
-  int32            id = 1 ;
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
   keySpec          keySpec = 2 ;
   signingProfile   signingProfile = 3 ;
   signable         content = 4 ;
