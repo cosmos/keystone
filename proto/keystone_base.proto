@@ -30,6 +30,21 @@ enum signingProfile {
   PROFILE_ECDSA_NOHASH =    3 ;
 }
 
+message helo {
+  int64            id = 1 ;
+  bytes            publicKey = 2 ;
+  bytes            encTimestamp = 3 ;
+  bytes            signedIdKey = 4 ;
+}
+
+message ehlo {
+  int64            id = 1 ;
+  int64            inResponseTo = 2 ;
+  bytes            publicKey = 3 ;
+  bytes            encTimestamp = 4 ;
+  bytes            signedIdKey = 5 ;
+}
+
 message keySpec {
   int32            id = 1 ;
   string           label = 2 ;
