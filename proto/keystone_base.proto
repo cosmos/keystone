@@ -81,8 +81,8 @@ message publicKey {
 message signable {
   uint64           id = 1 ;
   oneof data {
-    bytes          signableBytes = 1 ;
-    string         txref = 2 ;
+    bytes          signableBytes = 2 ;
+    string         txref = 3 ;
   }
 }
 
@@ -99,7 +99,7 @@ message signed {
 message msg {
   uint64           id = 1 ;
   uint64           inResponseTo = 2 ;
-  keySpec          keySpec = 2 ;
-  signingProfile   signingProfile = 3 ;
-  signable         content = 4 ;
+  keySpec          keySpec = 3 ;
+  signingProfile   signingProfile = 4 ;
+  signable         content = 5 ;
 }
