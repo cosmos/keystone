@@ -6,31 +6,15 @@ import (
 	"fmt"
 	"os"
 	"log"
-	"context"
-	"math"
-	"math/big"
-
-	"crypto/rand"
-	"google.golang.org/grpc"
-
+	"crypto/ed25519"
+	
+	"golang.org/x/crypto/ssh/terminal"
+	
 	"github.com/cosmos/keystone/utils"
 	keystonepb "github.com/cosmos/keystone/keystone"
-	keystoneadminpb "github.com/cosmos/keystone/keystone_admin"
+	//keystoneadminpb "github.com/cosmos/keystone/keystone_admin"
+	"github.com/cosmos/keystone/client"
 )
-
-// initKeys initializes the connection to the keystone server
-func initKeys(server string) *grpc.ClientConn {
-
-	opts := grpc.WithInsecure()
-	
-	cc, err := grpc.Dial(server, opts)
-	
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return cc
-}
 
 // main parses command line flags for the various options and then
 // constructs requests to the keystone server, checks responses and
@@ -44,7 +28,6 @@ func main() {
 	
 	var algo string
 	var profile string
-	var cc *grpc.ClientConn
 	
 	flag.BoolVar(&createKey, "create", false, "create a new key")
 	flag.BoolVar(&sign, "sign", false, "sign something with a key")
@@ -55,82 +38,66 @@ func main() {
 	flag.StringVar(&profile, "profile", "PROFILE_BC_ECDSA256", "PROFILE_BC_ECDSA256 | PROFILE_ECDSA256")
 
 	flag.Parse()
-	
-	cc = initKeys("localhost:8080")
-	client := keystonepb.NewKeyringClient(cc)
-	adminClient := keystoneadminpb.NewKeyringAdminClient(cc)
-	
-	defer cc.Close()
 
+	fmt.Println("Enter a password to encrypt data in transit: ")
+	pwrod, err := terminal.ReadPassword(int(os.Stdout.Fd()))
+
+	var clientKey ed25519.PrivateKey
+	var clientSalt []byte
+	
+	if err == nil {
+		clientKey, clientSalt, err = utils.KeyFrom(pwrod, nil)
+
+		if err != nil {
+			log.Fatalf("Could not create server key")
+		}
+	}
+
+	ks, err := client.Keystore("localhost:8080", clientKey, clientSalt)
+
+	if err != nil {
+		log.Fatalf( "Could not connect to key server: %v", err )
+	}
+	
 	if createKeyring == true {
-		labelBytes, err := randomBytes(16)
+
+		kr, err := ks.NewKeyring()
 
 		if err != nil {
-			log.Fatalf("Error getting randomness")
+			log.Fatalf("Could not create keyring: %v", err)
 		}
 		
-		id, err := randomUint64()	
-
-		if err != nil {
-			log.Fatalf("Error getting randomness")
-		}
-			
-		label := fmt.Sprintf("%x",labelBytes)
-
-		if err != nil {
-			log.Fatalf("Error creating key: %v", err)
-		}
-		
-		request := &keystoneadminpb.KeyringSpec{Id: id, Label: label,}
-
-		keyringRef, err := adminClient.NewKeyring( context.Background(), request )
-		
-		if err != nil {
-			log.Fatalf("Error creating keyring: %v", err)
-		}
-
-		fmt.Printf("New keyring: %s\n", keyringRef.Label)
+		fmt.Printf("New keyring: %s\n", kr.Label())
 	}
 	
 	if createKey == true {
 		//fmt.Printf("client: %v", client)
 
-		labelBytes, err := randomBytes(16)
-		
-		label := fmt.Sprintf("%x",labelBytes)
-
-		if err != nil {
-			log.Fatalf("Error creating key: %v", err)
-		}
-		
-		request := &keystonepb.KeySpec{Label: label,
-			Algo: keystonepb.KeygenAlgorithm_KEYGEN_SECP256R1,}
-		
-		keyref, err := client.NewKey( context.Background(), request )
+		key, err := ks.NewKey(keystonepb.KeygenAlgorithm_KEYGEN_SECP256R1, "0" )
 		
 		if err != nil {
 			log.Fatalf("Error creating key: %v", err)
 		}
 
-		fmt.Printf("New key: %s\n", keyref.Label)
+		fmt.Printf("New key: %s\n", key.Label())
 	}
 
 	if pubkey == true {
 		keyname := flag.Args()[0]
 
+		
 		if len(keyname) == 0 {
 			fmt.Println("Usage: program_name [-key] keyname")
 			flag.PrintDefaults()
 			os.Exit(1)
 		} else {
-			request := &keystonepb.KeySpec{Label: keyname}
-			
-			pubKey, err := client.PubKey( context.Background(), request )
-			
-			if err != nil {
-				log.Fatalf("Error getting key: %v", err)
-			}
+			privateKey, err := ks.Key( keyname )
+			pubKey, err := privateKey.PubKey()
 
+			if err != nil {
+				log.Fatalf("error retrieving key: %v", err)
+			}
+			
 			fmt.Printf("%x\n", pubKey.KeyBytes)
 		}
 		
