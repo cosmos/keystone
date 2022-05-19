@@ -6,9 +6,15 @@ import (
 	"log"
 	"net"
 	"plugin"
-
+	"fmt"
+	"os"
+	
+	"crypto/ed25519"
+	
 	"google.golang.org/grpc"
-
+	"golang.org/x/crypto/ssh/terminal"
+	
+	"github.com/cosmos/keystone/utils"
 	pb "github.com/cosmos/keystone/keystone"
 	adminpb "github.com/cosmos/keystone/keystone_admin"
 	
@@ -45,10 +51,29 @@ type server struct {
 	KeyringDir    string
 	RpcURI        string
 	Plugins       []*krplugin.Plugin
+	ServerKey     ed25519.PrivateKey
+	ServerSalt    []byte
 }
 
 func New() (Server, error) {
 	return &server{}, nil
+}
+
+func (s *server) Hello(ctx context.Context, in *pb.Helo) (*pb.Ehlo, error) {
+
+	id, err := utils.RandomUint64()
+
+	if err != nil {
+		log.Printf("Unable to generate a random id")
+		return nil, err
+	}
+	
+	ehlo := pb.Ehlo{
+		Id: id,
+		InResponseTo: in.Id,
+	}
+
+	return &ehlo, nil
 }
 
 // NewKey implements the method given in the protobuf definition for
@@ -159,6 +184,20 @@ func main() {
 		log.Fatalln("At least one key-serving plugin libraries MUST be given with -plugin")
 	}
 
+	fmt.Println("Enter a password to encrypt data in transit: ")
+	pwrod, err := terminal.ReadPassword(int(os.Stdout.Fd()))
+
+	var serverKey ed25519.PrivateKey
+	var serverSalt []byte
+	
+	if err == nil {
+		serverKey, serverSalt, err = utils.KeyFrom(pwrod, nil)
+
+		if err != nil {
+			log.Fatalf("Could not create server key")
+		}
+	}
+		
 	var pluginList []*krplugin.Plugin
 
 	for _, s := range plugins {
@@ -211,6 +250,8 @@ func main() {
 		KeyringDir:    *keyringDir,
 		RpcURI:        *chainRpcURI,
 		Plugins:       pluginList,
+		ServerKey:     serverKey,
+		ServerSalt:    serverSalt,
 	}
 
 	s := grpc.NewServer()
