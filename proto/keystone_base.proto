@@ -103,3 +103,14 @@ message msg {
   signingProfile   signingProfile = 4 ;
   signable         content = 5 ;
 }
+
+message result {
+  uint64           id = 1 ;
+  uint64           inResponseTo = 2 ;
+  // error == 0 indicates success, any non-zero error is an actual error
+  int32            error = 3 ;
+}
+
+message empty {
+  uint64           id =1 ;
+}

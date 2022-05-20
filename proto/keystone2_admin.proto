@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "keystone_base.proto" ;
 
 package keystone ;
 option go_package = "./keystone_admin" ;
@@ -9,19 +10,29 @@ message keyringSpec {
 }
 
 message keyringRef {
-  uint64            inResponseTo = 1 ;
-  string            label = 2 ;
-  string            issuerUrl = 3 ;
-  uint64            expires = 4 ;
-  string            issuerIdUrl = 5 ;
+  uint64            id = 1 ;
+  uint64            inResponseTo = 2 ;
+  string            label = 3 ;
+  string            issuerUrl = 4 ;
+  uint64            expires = 5 ;
+  string            issuerIdUrl = 6 ;
 }
 
 message keyrefList {
-  uint64            inResponseTo = 1 ;
-  repeated string   label = 2 ;
+  uint64            id = 1 ;
+  uint64            inResponseTo = 2 ;
+  repeated keyRef   label = 3 ;
+}
+
+message keyringLabel {
+  uint64            id = 1 ;
+  uint64            inResponseTo = 2 ;
+  string            label = 3 ;
 }
 
 service keyringAdmin {
   rpc newKeyring(keyringSpec)                 returns (keyringRef) {} ;
-  rpc listKeys(keyringSpec)                   returns (keyrefList) {} ;
+  rpc keys(keyringSpec)                       returns (keyrefList) {} ;
+  rpc label(empty)                            returns (keyringLabel) {} ;
+  rpc remove(keySpec)                         returns (result) {} ;
 }
