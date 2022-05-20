@@ -7,6 +7,7 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 replace github.com/cosmos/keystone => ./
 
 require (
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.28.0
 )
