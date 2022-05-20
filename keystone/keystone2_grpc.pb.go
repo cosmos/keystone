@@ -22,8 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KeyringClient interface {
+	Hello(ctx context.Context, in *Helo, opts ...grpc.CallOption) (*Ehlo, error)
 	NewKey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error)
 	PubKey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*PublicKey, error)
+	Key(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error)
 	Metadata(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyMetadata, error)
 	Sign(ctx context.Context, in *Msg, opts ...grpc.CallOption) (*Signed, error)
 }
@@ -34,6 +36,15 @@ type keyringClient struct {
 
 func NewKeyringClient(cc grpc.ClientConnInterface) KeyringClient {
 	return &keyringClient{cc}
+}
+
+func (c *keyringClient) Hello(ctx context.Context, in *Helo, opts ...grpc.CallOption) (*Ehlo, error) {
+	out := new(Ehlo)
+	err := c.cc.Invoke(ctx, "/keystone.keyring/hello", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *keyringClient) NewKey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error) {
@@ -48,6 +59,15 @@ func (c *keyringClient) NewKey(ctx context.Context, in *KeySpec, opts ...grpc.Ca
 func (c *keyringClient) PubKey(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*PublicKey, error) {
 	out := new(PublicKey)
 	err := c.cc.Invoke(ctx, "/keystone.keyring/pubKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *keyringClient) Key(ctx context.Context, in *KeySpec, opts ...grpc.CallOption) (*KeyRef, error) {
+	out := new(KeyRef)
+	err := c.cc.Invoke(ctx, "/keystone.keyring/key", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +96,10 @@ func (c *keyringClient) Sign(ctx context.Context, in *Msg, opts ...grpc.CallOpti
 // All implementations must embed UnimplementedKeyringServer
 // for forward compatibility
 type KeyringServer interface {
+	Hello(context.Context, *Helo) (*Ehlo, error)
 	NewKey(context.Context, *KeySpec) (*KeyRef, error)
 	PubKey(context.Context, *KeySpec) (*PublicKey, error)
+	Key(context.Context, *KeySpec) (*KeyRef, error)
 	Metadata(context.Context, *KeySpec) (*KeyMetadata, error)
 	Sign(context.Context, *Msg) (*Signed, error)
 	mustEmbedUnimplementedKeyringServer()
@@ -87,11 +109,17 @@ type KeyringServer interface {
 type UnimplementedKeyringServer struct {
 }
 
+func (UnimplementedKeyringServer) Hello(context.Context, *Helo) (*Ehlo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Hello not implemented")
+}
 func (UnimplementedKeyringServer) NewKey(context.Context, *KeySpec) (*KeyRef, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewKey not implemented")
 }
 func (UnimplementedKeyringServer) PubKey(context.Context, *KeySpec) (*PublicKey, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PubKey not implemented")
+}
+func (UnimplementedKeyringServer) Key(context.Context, *KeySpec) (*KeyRef, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Key not implemented")
 }
 func (UnimplementedKeyringServer) Metadata(context.Context, *KeySpec) (*KeyMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Metadata not implemented")
@@ -110,6 +138,24 @@ type UnsafeKeyringServer interface {
 
 func RegisterKeyringServer(s grpc.ServiceRegistrar, srv KeyringServer) {
 	s.RegisterService(&Keyring_ServiceDesc, srv)
+}
+
+func _Keyring_Hello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Helo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyringServer).Hello(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/keystone.keyring/hello",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyringServer).Hello(ctx, req.(*Helo))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Keyring_NewKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -144,6 +190,24 @@ func _Keyring_PubKey_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(KeyringServer).PubKey(ctx, req.(*KeySpec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Keyring_Key_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeySpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyringServer).Key(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/keystone.keyring/key",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyringServer).Key(ctx, req.(*KeySpec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,12 +256,20 @@ var Keyring_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*KeyringServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "hello",
+			Handler:    _Keyring_Hello_Handler,
+		},
+		{
 			MethodName: "newKey",
 			Handler:    _Keyring_NewKey_Handler,
 		},
 		{
 			MethodName: "pubKey",
 			Handler:    _Keyring_PubKey_Handler,
+		},
+		{
+			MethodName: "key",
+			Handler:    _Keyring_Key_Handler,
 		},
 		{
 			MethodName: "metadata",
