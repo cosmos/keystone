@@ -10,7 +10,6 @@ import (
 	
 	"github.com/cosmos/keystone/utils"
 	keystonepb "github.com/cosmos/keystone/keystone"
-	keystoneadminpb "github.com/cosmos/keystone/keystone_admin"
 )	
 
 var ksClients = make(map[string]*keystore)
@@ -33,7 +32,7 @@ func initKeys(server string) (cc *grpc.ClientConn, err error) {
 // more keyrings.
 type keystore struct {
 	client *keystonepb.KeyringClient
-	adminclient *keystoneadminpb.KeyringAdminClient
+	adminclient *keystonepb.KeyringAdminClient
 	url string
 	clientKey ed25519.PrivateKey
 	clientSalt []byte
@@ -44,7 +43,7 @@ type keystore struct {
 // set of keys which may even be different versions of the "same" key,
 // maintained that way so older keys can still be used for decryption
 type keyring struct {
-	keyringRef *keystoneadminpb.KeyringRef
+	keyringRef *keystonepb.KeyringRef
 }
 
 // key is a proxy reference to a Keystone key stored on the
@@ -60,9 +59,14 @@ type publicKey struct {
 }
 
 type Keyring interface {
-	NewKey(algo keystonepb.KeygenAlgorithm) (*key, error)
+	NewKey(algo keystonepb.KeygenAlgorithm) (*Key, error)
+
+	// Each keyring has a unique label
 	Label() string
 	//Sign(msg []byte, profile keystonepb.SigningProfile) ([]byte, error)
+	Key(label string) (*Key, error)
+	Remove(label string) error
+	Keys() ([]*Key, error)
 }
 
 type Key interface {
@@ -81,7 +85,7 @@ func Keystore(keystoneUrl string, clientKey ed25519.PrivateKey, salt []byte) (ks
 		}
 		
 		client := keystonepb.NewKeyringClient(cc)
-		adminClient := keystoneadminpb.NewKeyringAdminClient(cc)
+		adminClient := keystonepb.NewKeyringAdminClient(cc)
 		
 		keystore := keystore{
 			client: &client,
@@ -170,7 +174,7 @@ func (ks *keystore) NewKeyring() (*keyring, error) {
 		log.Fatalf("Error creating key: %v", err)
 	}
 	
-	request := &keystoneadminpb.KeyringSpec{Id: id, Label: label,}
+	request := &keystonepb.KeyringSpec{Id: id, Label: label,}
 
 	ac := *ks.adminclient
 	keyringRef, err := ac.NewKeyring( context.Background(), request )
@@ -186,6 +190,19 @@ func (ks *keystore) NewKeyring() (*keyring, error) {
 		keyringRef: keyringRef,
 	}, nil
 
+}
+
+// @@TODO: stub
+func (ks *keystore) Remove(*key) (error) {
+	log.Printf("REMOVE")
+	return 0
+}
+
+// @@TODO: stub
+func (ks *keystore) Keys() ([]*Key, error) {
+	var keys []*Key
+	log.Printf("KEYS")
+	return keys
 }
 
 func (k *key) PubKey() (*publicKey, error) {
