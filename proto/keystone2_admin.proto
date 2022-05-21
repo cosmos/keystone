@@ -2,7 +2,7 @@ syntax = "proto3";
 import "keystone_base.proto" ;
 
 package keystone ;
-option go_package = "./keystone_admin" ;
+option go_package = "./keystone" ;
 
 message keyringSpec {
   uint64            id = 1 ;
