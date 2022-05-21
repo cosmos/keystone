@@ -195,14 +195,14 @@ func (ks *keystore) NewKeyring() (*keyring, error) {
 // @@TODO: stub
 func (ks *keystore) Remove(*key) (error) {
 	log.Printf("REMOVE")
-	return 0
+	return nil
 }
 
 // @@TODO: stub
 func (ks *keystore) Keys() ([]*Key, error) {
 	var keys []*Key
 	log.Printf("KEYS")
-	return keys
+	return keys, nil
 }
 
 func (k *key) PubKey() (*publicKey, error) {
