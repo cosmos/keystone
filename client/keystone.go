@@ -44,6 +44,7 @@ type keystore struct {
 // maintained that way so older keys can still be used for decryption
 type keyring struct {
 	keyringRef *keystonepb.KeyringRef
+	keyStore *keystore
 }
 
 // key is a proxy reference to a Keystone key stored on the
@@ -52,6 +53,7 @@ type keyring struct {
 type key struct {
 	keyRef *keystonepb.KeyRef
 	keyringRef *keyring
+	keyStore *keystore
 }
 
 type publicKey struct {
@@ -134,7 +136,7 @@ func (ks *keystore) NewKey(algo keystonepb.KeygenAlgorithm, krId string) (k *key
 	
 	fmt.Printf("New key: %s\n", keyref.Label)
 
-	return &key{ keyRef: keyref }, nil
+	return &key{ keyRef: keyref, keyStore: ks }, nil
 }
 
 func (ks *keystore) Key(label string) (k *key, err error) {
@@ -152,7 +154,7 @@ func (ks *keystore) Key(label string) (k *key, err error) {
 	
 	fmt.Printf("Key: %s\n", keyref.Label)
 
-	return &key{ keyRef: keyref }, nil
+	return &key{ keyRef: keyref, keyStore: ks }, nil
 }
 
 func (ks *keystore) NewKeyring() (*keyring, error) {
@@ -188,18 +190,19 @@ func (ks *keystore) NewKeyring() (*keyring, error) {
 	//@@TODO: create the keyring on keystone backend
 	return &keyring{
 		keyringRef: keyringRef,
+		keyStore: ks,
 	}, nil
 
 }
 
 // @@TODO: stub
-func (ks *keystore) Remove(*key) (error) {
+func (ks *keyring) Remove(*key) (error) {
 	log.Printf("REMOVE")
 	return nil
 }
 
 // @@TODO: stub
-func (ks *keystore) Keys() ([]*Key, error) {
+func (ks *keyring) Keys() ([]*Key, error) {
 	var keys []*Key
 	log.Printf("KEYS")
 	return keys, nil
