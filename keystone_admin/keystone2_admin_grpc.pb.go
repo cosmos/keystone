@@ -7,6 +7,7 @@
 package keystone_admin
 
 import (
+	keystone "./keystone"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -23,7 +24,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KeyringAdminClient interface {
 	NewKeyring(ctx context.Context, in *KeyringSpec, opts ...grpc.CallOption) (*KeyringRef, error)
-	ListKeys(ctx context.Context, in *KeyringSpec, opts ...grpc.CallOption) (*KeyrefList, error)
+	Keys(ctx context.Context, in *KeyringSpec, opts ...grpc.CallOption) (*KeyrefList, error)
+	Label(ctx context.Context, in *keystone.Empty, opts ...grpc.CallOption) (*KeyringLabel, error)
+	Remove(ctx context.Context, in *keystone.KeySpec, opts ...grpc.CallOption) (*keystone.Result, error)
 }
 
 type keyringAdminClient struct {
@@ -43,9 +46,27 @@ func (c *keyringAdminClient) NewKeyring(ctx context.Context, in *KeyringSpec, op
 	return out, nil
 }
 
-func (c *keyringAdminClient) ListKeys(ctx context.Context, in *KeyringSpec, opts ...grpc.CallOption) (*KeyrefList, error) {
+func (c *keyringAdminClient) Keys(ctx context.Context, in *KeyringSpec, opts ...grpc.CallOption) (*KeyrefList, error) {
 	out := new(KeyrefList)
-	err := c.cc.Invoke(ctx, "/keystone.keyringAdmin/listKeys", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/keystone.keyringAdmin/keys", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *keyringAdminClient) Label(ctx context.Context, in *keystone.Empty, opts ...grpc.CallOption) (*KeyringLabel, error) {
+	out := new(KeyringLabel)
+	err := c.cc.Invoke(ctx, "/keystone.keyringAdmin/label", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *keyringAdminClient) Remove(ctx context.Context, in *keystone.KeySpec, opts ...grpc.CallOption) (*keystone.Result, error) {
+	out := new(keystone.Result)
+	err := c.cc.Invoke(ctx, "/keystone.keyringAdmin/remove", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +78,9 @@ func (c *keyringAdminClient) ListKeys(ctx context.Context, in *KeyringSpec, opts
 // for forward compatibility
 type KeyringAdminServer interface {
 	NewKeyring(context.Context, *KeyringSpec) (*KeyringRef, error)
-	ListKeys(context.Context, *KeyringSpec) (*KeyrefList, error)
+	Keys(context.Context, *KeyringSpec) (*KeyrefList, error)
+	Label(context.Context, *keystone.Empty) (*KeyringLabel, error)
+	Remove(context.Context, *keystone.KeySpec) (*keystone.Result, error)
 	mustEmbedUnimplementedKeyringAdminServer()
 }
 
@@ -68,8 +91,14 @@ type UnimplementedKeyringAdminServer struct {
 func (UnimplementedKeyringAdminServer) NewKeyring(context.Context, *KeyringSpec) (*KeyringRef, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewKeyring not implemented")
 }
-func (UnimplementedKeyringAdminServer) ListKeys(context.Context, *KeyringSpec) (*KeyrefList, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListKeys not implemented")
+func (UnimplementedKeyringAdminServer) Keys(context.Context, *KeyringSpec) (*KeyrefList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Keys not implemented")
+}
+func (UnimplementedKeyringAdminServer) Label(context.Context, *keystone.Empty) (*KeyringLabel, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Label not implemented")
+}
+func (UnimplementedKeyringAdminServer) Remove(context.Context, *keystone.KeySpec) (*keystone.Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
 }
 func (UnimplementedKeyringAdminServer) mustEmbedUnimplementedKeyringAdminServer() {}
 
@@ -102,20 +131,56 @@ func _KeyringAdmin_NewKeyring_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _KeyringAdmin_ListKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _KeyringAdmin_Keys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(KeyringSpec)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(KeyringAdminServer).ListKeys(ctx, in)
+		return srv.(KeyringAdminServer).Keys(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/keystone.keyringAdmin/listKeys",
+		FullMethod: "/keystone.keyringAdmin/keys",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(KeyringAdminServer).ListKeys(ctx, req.(*KeyringSpec))
+		return srv.(KeyringAdminServer).Keys(ctx, req.(*KeyringSpec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KeyringAdmin_Label_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(keystone.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyringAdminServer).Label(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/keystone.keyringAdmin/label",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyringAdminServer).Label(ctx, req.(*keystone.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KeyringAdmin_Remove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(keystone.KeySpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KeyringAdminServer).Remove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/keystone.keyringAdmin/remove",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KeyringAdminServer).Remove(ctx, req.(*keystone.KeySpec))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,8 +197,16 @@ var KeyringAdmin_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _KeyringAdmin_NewKeyring_Handler,
 		},
 		{
-			MethodName: "listKeys",
-			Handler:    _KeyringAdmin_ListKeys_Handler,
+			MethodName: "keys",
+			Handler:    _KeyringAdmin_Keys_Handler,
+		},
+		{
+			MethodName: "label",
+			Handler:    _KeyringAdmin_Label_Handler,
+		},
+		{
+			MethodName: "remove",
+			Handler:    _KeyringAdmin_Remove_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
